@@ -7,73 +7,284 @@
 
 #include <iostream>
 #include <vector>
+#include <algorithm>
 using namespace std;
 
 class Grafos {
-    // https://slideplayer.com.br/slide/1268779/3/images/2/Conceitos+Grafo%3A+Conjunto+de+V%C3%A9rtices+e+Arestas.jpg
+public:
+    bool direcionado;
+    bool ponderado;
 
-    public:
-        // As arestas possuem cardinalidade, havendo casos que não pode voltar o caminho
-        bool direcionado;
-        // Cada vértice possui um peso, dois caminhos iguais podem levar +/- para completar
-        bool ponderado;
+    // Construtor
+    Grafos(bool Direcionado, bool Ponderado) {
+        direcionado = Direcionado;
+        ponderado = Ponderado;
+    }
 
-        // Construtor
-        Grafos(bool Direcionado, bool Ponderado){
-            direcionado = Direcionado;
-            ponderado = Ponderado;
+    // Métodos virtuais
+    virtual bool inserirVertice(string label) = 0;
+    virtual bool removerVertice(int indice) = 0;
+    virtual string labelVertice(int indice) = 0;
+    virtual void imprimeGrafo() = 0;
+    virtual bool inserirAresta(int origem, int destino, int peso = 1) = 0;
+    virtual bool removerAresta(int origem, int destino) = 0;
+    virtual bool existeAresta(int origem, int destino) = 0;
+    virtual float pesoAresta(int origem, int destino) = 0;
+    virtual vector<int> retornarVizinhos(int vertice) = 0;
+};
+
+// Estrutura para representar uma aresta na lista de adjacência
+struct Aresta {
+    int destino;
+    int peso;
+    Aresta(int d, int p) : destino(d), peso(p) {}
+};
+
+// Implementação usando matriz de adjacência
+class GrafoMatriz : public Grafos {
+private:
+    vector<vector<int>> matriz; // Matriz de adjacência
+    vector<string> vertices;    // Rótulos dos vértices
+
+public:
+    // Construtor
+    GrafoMatriz(bool Direcionado, bool Ponderado) : Grafos(Direcionado, Ponderado) {}
+
+    // Adiciona um vértice ao grafo
+    bool inserirVertice(string label) override {
+        vertices.push_back(label);
+        for (auto& linha : matriz) {
+            linha.push_back(0); // Inicializa com 0 (sem aresta)
+        }
+        matriz.push_back(vector<int>(vertices.size(), 0)); // Nova linha para o novo vértice
+        return true;
+    }
+
+    // Remove um vértice do grafo
+    bool removerVertice(int indice) override {
+        if (indice < 0 || indice >= vertices.size()) return false;
+
+        vertices.erase(vertices.begin() + indice);
+        matriz.erase(matriz.begin() + indice);
+
+        for (auto& linha : matriz) {
+            linha.erase(linha.begin() + indice);
         }
 
-        //// MÉTODOS ////
+        return true;
+    }
 
-        // Adiciona um vértice sem nenhuma aresta associada a ele, pode parecer igual em ambos os casos, mas não é.
-        // Precisamos adicionar esse vértice no vetor de vértices e também alocar seu espaço para as arestas.
-        virtual bool inserirVertice(string label);
+    // Retorna o rótulo de um vértice
+    string labelVertice(int indice) override {
+        if (indice < 0 || indice >= vertices.size()) return "";
+        return vertices[indice];
+    }
 
-        // Remove um vértice do grafo, elimina a linha e coluna dele da matriz e a referência dele da lista, 
-        // junto com todas as arestas que chegam e saem dele.
-        virtual bool removerVertice(int indice);
+    // Imprime o grafo
+    void imprimeGrafo() override {
+        cout << "Matriz de Adjacência:" << endl;
+        for (size_t i = 0; i < vertices.size(); i++) {
+            cout << vertices[i] << ": ";
+            for (size_t j = 0; j < vertices.size(); j++) {
+                cout << matriz[i][j] << " ";
+            }
+            cout << endl;
+        }
+    }
 
-        // Funções básicas para retornar o nome de um vértice.
-        virtual string labelVertice(int indice);
+    // Insere uma aresta entre dois vértices
+    bool inserirAresta(int origem, int destino, int peso = 1) override {
+        if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size()) return false;
 
-        // Imprimir o grafo no console, 
-        // tentem deixar próximo da representação dos slides (não precisa da grade da matriz).
-        virtual void imprimeGrafo();
+        matriz[origem][destino] = peso;
+        if (!direcionado) {
+            matriz[destino][origem] = peso; // Aresta bidirecional
+        }
+        return true;
+    }
 
-        // Essa operação deve ter um cuidado especial, ela deve ser executada levando em conta o tipo do grafo. 
-        // No caso de um grafo ponderado o peso deve ser aplicado e no caso de um grafo direcionado, 
-        // uma ligação de volta deve ser adicionada;
-        virtual bool inserirAresta(int origem, int destino, int peso = 1);
+    // Remove uma aresta entre dois vértices
+    bool removerAresta(int origem, int destino) override {
+        if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size()) return false;
 
-        // Remove uma aresta entre dois vértices no grafo, 
-        // lembrando que no grafo não direcionado deve ser removida a aresta de retorno também;
-        virtual bool removerAresta(int origem, int destino);
+        matriz[origem][destino] = 0;
+        if (!direcionado) {
+            matriz[destino][origem] = 0; // Remove a aresta bidirecional
+        }
+        return true;
+    }
 
-        // Verifica a existência de uma aresta, aqui vemos uma diferença grande entre matriz e lista.
-        virtual bool existeAresta(int origem, int destino);
+    // Verifica se existe uma aresta entre dois vértices
+    bool existeAresta(int origem, int destino) override {
+        if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size()) return false;
+        return matriz[origem][destino] != 0;
+    }
 
-        // Retorne o peso de uma aresta, aqui vemos uma diferença grande entre matriz e lista.
-        virtual float pesoAresta(int origem, int destino);
+    // Retorna o peso de uma aresta
+    float pesoAresta(int origem, int destino) override {
+        if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size()) return -1;
+        return matriz[origem][destino];
+    }
 
-        // Função para retorno dos vizinhos de um vértice, 
-        // necessária pois não teremos acesso a estrutura das arestas para os próximos algoritmos.
-        virtual vector<int> retornarVizinhos(int vertice);
+    // Retorna os vizinhos de um vértice
+    vector<int> retornarVizinhos(int vertice) override {
+        vector<int> vizinhos;
+        if (vertice < 0 || vertice >= vertices.size()) return vizinhos;
+
+        for (size_t i = 0; i < vertices.size(); i++) {
+            if (matriz[vertice][i] != 0) {
+                vizinhos.push_back(i);
+            }
+        }
+        return vizinhos;
+    }
 };
 
-// Usa uma matriz de adjacência como representação do grafo.
-// https://miro.medium.com/v2/resize:fit:960/1*gny0Hz4hd90zDeCyY0s72A.png
-class GrafoMatriz: public Grafos {
+// Implementação usando lista de adjacência
+class GrafoLista : public Grafos {
+private:
+    vector<vector<Aresta>> lista; // Lista de adjacência
+    vector<string> vertices;      // Rótulos dos vértices
 
+public:
+    // Construtor
+    GrafoLista(bool Direcionado, bool Ponderado) : Grafos(Direcionado, Ponderado) {}
+
+    // Adiciona um vértice ao grafo
+    bool inserirVertice(string label) override {
+        vertices.push_back(label);
+        lista.push_back(vector<Aresta>()); // Adiciona uma lista vazia para o novo vértice
+        return true;
+    }
+
+    // Remove um vértice do grafo
+    bool removerVertice(int indice) override {
+        if (indice < 0 || indice >= vertices.size()) return false;
+
+        vertices.erase(vertices.begin() + indice);
+        lista.erase(lista.begin() + indice);
+
+        for (auto& vizinhos : lista) {
+            vizinhos.erase(
+                remove_if(vizinhos.begin(), vizinhos.end(),
+                          [indice](const Aresta& a) { return a.destino == indice; }),
+                vizinhos.end());
+        }
+
+        for (auto& vizinhos : lista) {
+            for (auto& aresta : vizinhos) {
+                if (aresta.destino > indice) {
+                    aresta.destino--;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    // Retorna o rótulo de um vértice
+    string labelVertice(int indice) override {
+        if (indice < 0 || indice >= vertices.size()) return "";
+        return vertices[indice];
+    }
+
+    // Imprime o grafo
+    void imprimeGrafo() override {
+        cout << "Lista de Adjacência:" << endl;
+        for (size_t i = 0; i < vertices.size(); i++) {
+            cout << vertices[i] << ": ";
+            for (const auto& aresta : lista[i]) {
+                cout << "(" << vertices[aresta.destino] << ", " << aresta.peso << ") ";
+            }
+            cout << endl;
+        }
+    }
+
+    // Insere uma aresta entre dois vértices
+    bool inserirAresta(int origem, int destino, int peso = 1) override {
+        if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size()) return false;
+
+        lista[origem].emplace_back(destino, peso);
+        if (!direcionado) {
+            lista[destino].emplace_back(origem, peso); // Aresta bidirecional
+        }
+        return true;
+    }
+
+    // Remove uma aresta entre dois vértices
+    bool removerAresta(int origem, int destino) override {
+        if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size()) return false;
+
+        lista[origem].erase(
+            remove_if(lista[origem].begin(), lista[origem].end(),
+                      [destino](const Aresta& a) { return a.destino == destino; }),
+            lista[origem].end());
+
+        if (!direcionado) {
+            lista[destino].erase(
+                remove_if(lista[destino].begin(), lista[destino].end(),
+                          [origem](const Aresta& a) { return a.destino == origem; }),
+                lista[destino].end());
+        }
+
+        return true;
+    }
+
+    // Verifica se existe uma aresta entre dois vértices
+    bool existeAresta(int origem, int destino) override {
+        if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size()) return false;
+
+        for (const auto& aresta : lista[origem]) {
+            if (aresta.destino == destino) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Retorna o peso de uma aresta
+    float pesoAresta(int origem, int destino) override {
+        if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size()) return -1;
+
+        for (const auto& aresta : lista[origem]) {
+            if (aresta.destino == destino) {
+                return aresta.peso;
+            }
+        }
+        return -1;
+    }
+
+    // Retorna os vizinhos de um vértice
+    vector<int> retornarVizinhos(int vertice) override {
+        vector<int> vizinhos;
+        if (vertice < 0 || vertice >= vertices.size()) return vizinhos;
+
+        for (const auto& aresta : lista[vertice]) {
+            vizinhos.push_back(aresta.destino);
+        }
+        return vizinhos;
+    }
 };
 
-// Usa uma lista de adjacência como representação do grafo 
-// e tem uma estrutura Aresta como auxilio
-// https://upload.wikimedia.org/wikipedia/commons/6/61/Grafos_lista_de_adjac%C3%AAncia.png
-class GrafoLista: public Grafos {
+// Função principal para testar as implementações
+int main() {
+    // Exemplo com GrafoMatriz
+    GrafoMatriz grafoMatriz(false, true); // Grafo não direcionado e ponderado
+    grafoMatriz.inserirVertice("A");
+    grafoMatriz.inserirVertice("B");
+    grafoMatriz.inserirVertice("C");
+    grafoMatriz.inserirAresta(0, 1, 5); // A -> B com peso 5
+    grafoMatriz.inserirAresta(1, 2, 3); // B -> C com peso 3
+    grafoMatriz.imprimeGrafo();
 
-};
+    // Exemplo com GrafoLista
+    GrafoLista grafoLista(true, false); // Grafo direcionado e não ponderado
+    grafoLista.inserirVertice("X");
+    grafoLista.inserirVertice("Y");
+    grafoLista.inserirVertice("Z");
+    grafoLista.inserirAresta(0, 1); // X -> Y
+    grafoLista.inserirAresta(1, 2); // Y -> Z
+    grafoLista.imprimeGrafo();
 
-int main(){
     return 0;
 }
