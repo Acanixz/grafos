@@ -10,10 +10,11 @@
 #include <algorithm>
 using namespace std;
 
+// Classe base abstrata para grafos
 class Grafos {
 public:
-    bool direcionado;
-    bool ponderado;
+    bool direcionado;  // Indica se o grafo é direcionado
+    bool ponderado;     // Indica se o grafo possui pesos nas arestas
 
     // Construtor
     Grafos(bool Direcionado, bool Ponderado) {
@@ -21,7 +22,7 @@ public:
         ponderado = Ponderado;
     }
 
-    // Métodos virtuais
+    // Métodos virtuais que deverão ser implementados nas classes derivadas
     virtual bool inserirVertice(string label) = 0;
     virtual bool removerVertice(int indice) = 0;
     virtual string labelVertice(int indice) = 0;
@@ -35,26 +36,26 @@ public:
 
 // Estrutura para representar uma aresta na lista de adjacência
 struct Aresta {
-    int destino;
-    int peso;
+    int destino;  // Índice do vértice de destino
+    int peso;     // Peso da aresta
     Aresta(int d, int p) : destino(d), peso(p) {}
 };
 
 // Implementação usando matriz de adjacência
 class GrafoMatriz : public Grafos {
 private:
-    vector<vector<int>> matriz; // Matriz de adjacência
-    vector<string> vertices;    // Rótulos dos vértices
+    vector<vector<int>> matriz; // Matriz de adjacência para armazenar arestas e pesos
+    vector<string> vertices;    // Vetor para armazenar os rótulos dos vértices
 
 public:
-    // Construtor
+    // Construtor que inicializa o grafo de matriz chamando o construtor da classe base
     GrafoMatriz(bool Direcionado, bool Ponderado) : Grafos(Direcionado, Ponderado) {}
 
     // Adiciona um vértice ao grafo
     bool inserirVertice(string label) override {
         vertices.push_back(label);
 
-        // Para cada vertice da matriz..
+        // Para cada linha já existente na matriz, adiciona 0 para a nova coluna
         for (auto& linha : matriz) {
             linha.push_back(0); // Inicializa com 0 (sem aresta)
         }
@@ -64,16 +65,17 @@ public:
         return true;
     }
 
-    // Remove um vértice do grafo
+    // Remove um vértice do grafo, removendo a linha e a coluna correspondente
     bool removerVertice(int indice) override {
-        // Não remover se vazio ou input out-of-bounds
+        // Verifica se o índice é válido
         if (indice < 0 || indice >= vertices.size()) return false;
 
-        // Remover linha da vertice da matriz
+        // Remove o vértice do vetor de rótulos
         vertices.erase(vertices.begin() + indice);
+        // Remove a linha correspondente na matriz de adjacência
         matriz.erase(matriz.begin() + indice);
 
-        // Remover registro das outras vertices
+        // Remove a coluna correspondente em todas as demais linhas da matriz
         for (auto& linha : matriz) {
             linha.erase(linha.begin() + indice);
         }
@@ -81,13 +83,13 @@ public:
         return true;
     }
 
-    // Retorna o rótulo de um vértice
+    // Retorna o rótulo de um vértice a partir do seu índice
     string labelVertice(int indice) override {
         if (indice < 0 || indice >= vertices.size()) return "";
         return vertices[indice];
     }
 
-    // Imprime o grafo
+    // Imprime o grafo mostrando os rótulos dos vértices e a matriz de adjacência
     void imprimeGrafo() override {
         cout << "Matriz de Adjacência:" << endl;
         for (size_t i = 0; i < vertices.size(); i++) {
@@ -99,10 +101,12 @@ public:
         }
     }
 
-    // Insere uma aresta entre dois vértices
+    // Insere uma aresta entre dois vértices, atribuindo o peso fornecido
     bool inserirAresta(int origem, int destino, int peso = 1) override {
+        // Validação dos índices de origem e destino
         if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size()) return false;
 
+        // Atribui o peso na posição correspondente da matriz
         matriz[origem][destino] = peso;
         if (!direcionado) {
             matriz[destino][origem] = peso; // Aresta bidirecional
@@ -110,34 +114,41 @@ public:
         return true;
     }
 
-    // Remove uma aresta entre dois vértices
+    // Remove uma aresta entre dois vértices, validando os índices e definindo o valor para 0 (sem aresta)
     bool removerAresta(int origem, int destino) override {
+        // Verifica se os índices estão dentro dos limites
         if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size()) return false;
 
+        // Remove a aresta atribuindo 0 à posição na matriz
         matriz[origem][destino] = 0;
+        // Para grafos não direcionados, remove também a aresta inversa
         if (!direcionado) {
             matriz[destino][origem] = 0; // Remove a aresta bidirecional
         }
         return true;
     }
 
-    // Verifica se existe uma aresta entre dois vértices
+    // Verifica se existe uma aresta entre os vértices de origem e destino
+    // Aresta válida tem peso diferente de zero
     bool existeAresta(int origem, int destino) override {
         if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size()) return false;
         return matriz[origem][destino] != 0;
     }
 
-    // Retorna o peso de uma aresta
+    // Retorna o peso da aresta entre dois vértices
+    // se não existir, retorna -1
     float pesoAresta(int origem, int destino) override {
         if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size()) return -1;
         return matriz[origem][destino];
     }
 
-    // Retorna os vizinhos de um vértice
+    // Retorna um vetor com os índices dos vértices vizinhos do vértice informado
     vector<int> retornarVizinhos(int vertice) override {
         vector<int> vizinhos;
+        // Verifica se o índice do vértice é válido
         if (vertice < 0 || vertice >= vertices.size()) return vizinhos;
 
+        // Percorre a linha da matriz correspondente ao vértice e adiciona os índices com arestas existentes
         for (size_t i = 0; i < vertices.size(); i++) {
             if (matriz[vertice][i] != 0) {
                 vizinhos.push_back(i);
@@ -150,28 +161,30 @@ public:
 // Implementação usando lista de adjacência
 class GrafoLista : public Grafos {
 private:
-    vector<vector<Aresta>> lista; // Lista de adjacência
-    vector<string> vertices;      // Rótulos dos vértices
+    vector<vector<Aresta>> lista; // Lista de adjacência para armazenar as arestas de cada vértice
+    vector<string> vertices;      // Vetor para armazenar os rótulos dos vértices
 
 public:
     // Construtor
     GrafoLista(bool Direcionado, bool Ponderado) : Grafos(Direcionado, Ponderado) {}
 
-    // Adiciona um vértice ao grafo
+    // Adiciona um vértice ao grafo [OK]
     bool inserirVertice(string label) override {
         vertices.push_back(label);
         lista.push_back(vector<Aresta>()); // Adiciona uma lista vazia para o novo vértice
         return true;
     }
 
-    // Remove um vértice do grafo
+    // Remove um vértice do grafo, removendo o rótulo, a lista de arestas e ajustando as referências
     bool removerVertice(int indice) override {
+        // Valida se o índice é válido
         if (indice < 0 || indice >= vertices.size()) return false;
 
-        // Remove dados da linha correspondente a vertice
+        // Remove o vértice do vetor de rótulos e da lista de adjacência
         vertices.erase(vertices.begin() + indice);
         lista.erase(lista.begin() + indice);
 
+        // Remove todas as arestas que apontam para o vértice removido
         for (auto& vizinhos : lista) {
             vizinhos.erase(
                 remove_if(vizinhos.begin(), vizinhos.end(),
@@ -179,6 +192,7 @@ public:
                 vizinhos.end());
         }
 
+        // Ajusta os índices de destino nas arestas que apontavam para vértices com índice maior que o removido
         for (auto& vizinhos : lista) {
             for (auto& aresta : vizinhos) {
                 if (aresta.destino > indice) {
@@ -190,13 +204,13 @@ public:
         return true;
     }
 
-    // Retorna o rótulo de um vértice
+    // Retorna o rótulo de um vértice, após validação do índice
     string labelVertice(int indice) override {
         if (indice < 0 || indice >= vertices.size()) return "";
         return vertices[indice];
     }
 
-    // Imprime o grafo
+    // Imprime o grafo mostrando a lista de adjacência com os rótulos e pesos das arestas
     void imprimeGrafo() override {
         cout << "Lista de Adjacência:" << endl;
         for (size_t i = 0; i < vertices.size(); i++) {
@@ -208,26 +222,32 @@ public:
         }
     }
 
-    // Insere uma aresta entre dois vértices
+    // Insere uma aresta entre dois vértices na lista de adjacência, adicionando aresta inversa se necessário
     bool inserirAresta(int origem, int destino, int peso = 1) override {
+        // Verifica se os índices dos vértices são válidos
         if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size()) return false;
 
+        // Adiciona a aresta na lista do vértice de origem
         lista[origem].emplace_back(destino, peso);
+        // Se o grafo não for direcionado, adiciona a aresta na direção oposta
         if (!direcionado) {
             lista[destino].emplace_back(origem, peso); // Aresta bidirecional
         }
         return true;
     }
 
-    // Remove uma aresta entre dois vértices
+    // Remove uma aresta entre dois vértices na lista de adjacência
     bool removerAresta(int origem, int destino) override {
+        // Valida os índices dos vértices
         if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size()) return false;
 
+        // Remove a aresta da lista do vértice de origem utilizando remove_if
         lista[origem].erase(
             remove_if(lista[origem].begin(), lista[origem].end(),
                       [destino](const Aresta& a) { return a.destino == destino; }),
             lista[origem].end());
 
+        // Para grafos não direcionados, remove também a aresta na direção inversa
         if (!direcionado) {
             lista[destino].erase(
                 remove_if(lista[destino].begin(), lista[destino].end(),
@@ -238,8 +258,9 @@ public:
         return true;
     }
 
-    // Verifica se existe uma aresta entre dois vértices
+    // Verifica se existe uma aresta entre os vértices de origem e destino na lista de adjacência
     bool existeAresta(int origem, int destino) override {
+        // Valida os índices e percorre a lista do vértice de origem para encontrar a aresta
         if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size()) return false;
 
         for (const auto& aresta : lista[origem]) {
@@ -250,8 +271,9 @@ public:
         return false;
     }
 
-    // Retorna o peso de uma aresta
+    // Retorna o peso da aresta entre dois vértices; se não existir, retorna -1
     float pesoAresta(int origem, int destino) override {
+        // Valida os índices e procura a aresta na lista do vértice de origem
         if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size()) return -1;
 
         for (const auto& aresta : lista[origem]) {
@@ -262,11 +284,13 @@ public:
         return -1;
     }
 
-    // Retorna os vizinhos de um vértice
+    // Retorna um vetor com os índices dos vértices vizinhos do vértice informado
     vector<int> retornarVizinhos(int vertice) override {
         vector<int> vizinhos;
+        // Verifica se o índice é válido
         if (vertice < 0 || vertice >= vertices.size()) return vizinhos;
 
+        // Adiciona cada destino presente na lista de arestas do vértice
         for (const auto& aresta : lista[vertice]) {
             vizinhos.push_back(aresta.destino);
         }
@@ -274,25 +298,25 @@ public:
     }
 };
 
-// Função principal para testar as implementações
+// Função principal para testar as implementações dos grafos
 int main() {
     // Exemplo com GrafoMatriz
-    GrafoMatriz grafoMatriz(false, true); // Grafo não direcionado e ponderado
+    GrafoMatriz grafoMatriz(false, true); // Cria um grafo não direcionado e ponderado usando matriz de adjacência
     grafoMatriz.inserirVertice("A");
     grafoMatriz.inserirVertice("B");
     grafoMatriz.inserirVertice("C");
-    grafoMatriz.inserirAresta(0, 1, 5); // A -> B com peso 5
-    grafoMatriz.inserirAresta(1, 2, 3); // B -> C com peso 3
+    grafoMatriz.inserirAresta(0, 1, 5);       // Insere aresta de A para B com peso 5
+    grafoMatriz.inserirAresta(1, 2, 3);       // Insere aresta de B para C com peso 3
     grafoMatriz.imprimeGrafo();
 
     // Exemplo com GrafoLista
-    GrafoLista grafoLista(true, false); // Grafo direcionado e não ponderado
+    GrafoLista grafoLista(true, false);     // Cria um grafo direcionado e não ponderado usando lista de adjacência
     grafoLista.inserirVertice("X");
     grafoLista.inserirVertice("Y");
     grafoLista.inserirVertice("Z");
-    grafoLista.inserirAresta(0, 1); // X -> Y
-    grafoLista.inserirAresta(1, 2); // Y -> Z
-    grafoLista.imprimeGrafo();
+    grafoLista.inserirAresta(0, 1);         // Insere aresta de X para Y
+    grafoLista.inserirAresta(1, 2);         // Insere aresta de Y para Z
+    grafoLista.imprimeGrafo();              // Exibe o grafo em forma de lista de adjacência
 
     return 0;
 }
