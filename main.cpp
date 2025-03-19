@@ -53,20 +53,27 @@ public:
     // Adiciona um vértice ao grafo
     bool inserirVertice(string label) override {
         vertices.push_back(label);
+
+        // Para cada vertice da matriz..
         for (auto& linha : matriz) {
             linha.push_back(0); // Inicializa com 0 (sem aresta)
         }
+
+        // Adiciona uma nova linha com 0s equivalente a qtd. de vertices
         matriz.push_back(vector<int>(vertices.size(), 0)); // Nova linha para o novo vértice
         return true;
     }
 
     // Remove um vértice do grafo
     bool removerVertice(int indice) override {
+        // Não remover se vazio ou input out-of-bounds
         if (indice < 0 || indice >= vertices.size()) return false;
 
+        // Remover linha da vertice da matriz
         vertices.erase(vertices.begin() + indice);
         matriz.erase(matriz.begin() + indice);
 
+        // Remover registro das outras vertices
         for (auto& linha : matriz) {
             linha.erase(linha.begin() + indice);
         }
@@ -161,6 +168,7 @@ public:
     bool removerVertice(int indice) override {
         if (indice < 0 || indice >= vertices.size()) return false;
 
+        // Remove dados da linha correspondente a vertice
         vertices.erase(vertices.begin() + indice);
         lista.erase(lista.begin() + indice);
 
