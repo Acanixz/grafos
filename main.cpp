@@ -6,8 +6,10 @@
 //      Paola Piran Zanella
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <algorithm>
+#include <sstream>
 using namespace std;
 
 // Classe base abstrata para grafos
@@ -21,6 +23,90 @@ public:
         direcionado = Direcionado;
         ponderado = Ponderado;
     }
+
+    // Métodos para leitura de arquivos
+    bool lerArquivo(const string& filePath) {
+        cout << "LEITURA DE ARQUIVO:" << endl;
+        cout << "-----------------" << endl;
+        try {
+            fstream arquivo(filePath);
+            int numVertices = 0, numArestas = 0;
+
+
+            // Leitura do cabeçalho, separado por espaços
+            // Deve ser feito a leitura de linha (tratativa para \n)
+            // Seguido da leitura da stringstream (tratativa para espaços)
+            string cabecalho;
+            getline(arquivo, cabecalho);
+            stringstream cabecalhoStringStream(cabecalho);
+            for (int i = 0; i < 4; i++) {
+                string trecho;
+                getline(cabecalhoStringStream, trecho, ' ');
+
+                switch (i) {
+                    case 0:
+                        numVertices = stoi(trecho);
+                        break;
+                    case 1:
+                        numArestas = stoi(trecho);
+                        break;
+                    case 2:
+                        direcionado = stoi(trecho);
+                        break;
+                    case 3:
+                        ponderado = stoi(trecho);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            cout << "V: " << numVertices << " | A: " << numArestas << " | D: " << direcionado << " | P: " << ponderado << endl;
+            cout << "-----------------" << endl;
+
+            // Carregamento das vertices
+            for (int i = 0; i < numVertices; i++) {
+                inserirVertice("VERTEX_" + i);
+            }
+
+            // Carregamentos das arestas
+            for (int i = 0; i < numArestas; i++) {
+                // Obtém linha completa
+                string linha;
+                getline(arquivo, linha);
+                stringstream linhaStringStream(linha);
+
+                string tmp_vertice_origem, tmp_vertice_destino;
+                int vertice_origem, vertice_destino, aresta_peso;
+
+                // Obtém variaveis através da separação de espaços
+                getline(linhaStringStream, tmp_vertice_origem, ' ');
+                getline(linhaStringStream, tmp_vertice_destino, ' ');
+
+                vertice_origem = stoi(tmp_vertice_origem);
+                vertice_destino = stoi(tmp_vertice_destino);
+                if (ponderado) {
+                    string tmp_aresta_peso;
+                    getline(linhaStringStream, tmp_aresta_peso, ' ');
+                    aresta_peso = stoi(tmp_aresta_peso);
+                }
+
+                inserirAresta(vertice_origem, vertice_destino, aresta_peso);
+
+                cout << vertice_origem << " " << vertice_destino << " " << ((ponderado) ? aresta_peso : 0) << endl;
+                if (!direcionado) {
+                    cout << vertice_destino << " " << vertice_origem << " " << ((ponderado) ? aresta_peso : 0) << endl;
+                }
+            }
+
+            return true;
+        } catch (exception &e) {
+            cout << "Não foi possivel ler o arquivo: " << filePath << "\nMotivo: " << e.what() << endl;
+        }
+        return false;
+    }
+
+
 
     // Métodos virtuais que deverão ser implementados nas classes derivadas
     virtual bool inserirVertice(string label) = 0;
@@ -300,6 +386,9 @@ public:
 
 // Função principal para testar as implementações dos grafos
 int main() {
+    GrafoMatriz grafoMatriz(false, true);
+    grafoMatriz.lerArquivo("teste.txt");
+    /*
     // Exemplo com GrafoMatriz
     GrafoMatriz grafoMatriz(false, true); // Cria um grafo não direcionado e ponderado usando matriz de adjacência
     grafoMatriz.inserirVertice("A");
@@ -317,6 +406,8 @@ int main() {
     grafoLista.inserirAresta(0, 1);         // Insere aresta de X para Y
     grafoLista.inserirAresta(1, 2);         // Insere aresta de Y para Z
     grafoLista.imprimeGrafo();              // Exibe o grafo em forma de lista de adjacência
+    */
+
 
     return 0;
 }
