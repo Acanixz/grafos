@@ -17,6 +17,7 @@ class Grafos {
 public:
     bool direcionado;  // Indica se o grafo é direcionado
     bool ponderado;     // Indica se o grafo possui pesos nas arestas
+    int qtdVertices = 0;
 
     // Construtor
     Grafos(bool Direcionado, bool Ponderado) {
@@ -106,6 +107,46 @@ public:
         return false;
     }
 
+    // Algoritmo de busca Depth First Search
+    // Começa em uma vertice e chama recursivamente os vizinhos,
+    // Marcando-os como "visitado" e retornando os índices visitados p/ chamada pai
+    vector<int> depthFirstSearch(int verticeOrigem) {
+        // Verificar o tamanho dos vértices e inicializar o vetor de visitados
+        vector<bool> visitado(this->qtdVertices, false);
+        vector<int> resultado;
+
+        // Iniciar a DFS recursiva
+        _dfsRec(verticeOrigem, visitado, resultado);
+
+        if (resultado.empty()) {
+            cout << "Nenhum caminho encontrado" << endl;
+        } else {
+            cout << "Caminho encontrado: ";
+            for (int vertice : resultado) {
+                cout << vertice << " ";
+            }
+            cout << endl;
+        }
+
+        return resultado;
+    }
+
+    // Função recursiva auxiliar para DFS
+    void _dfsRec(int verticeAtual, vector<bool>& visitado, vector<int>& resultado) {
+        // Marcar o vértice atual como visitado e adicioná-lo ao resultado
+        visitado[verticeAtual] = true;
+        resultado.push_back(verticeAtual);
+
+        // Obter vizinhos do vértice atual
+        vector<int> vizinhos = retornarVizinhos(verticeAtual);
+
+        // Percorrer os vizinhos
+        for (int vizinho : vizinhos) {
+            if (!visitado[vizinho]) {
+                _dfsRec(vizinho, visitado, resultado);
+            }
+        }
+    }
 
 
     // Métodos virtuais que deverão ser implementados nas classes derivadas
@@ -148,6 +189,7 @@ public:
 
         // Adiciona uma nova linha com 0s equivalente a qtd. de vertices
         matriz.push_back(vector<int>(vertices.size(), 0)); // Nova linha para o novo vértice
+        qtdVertices += 1;
         return true;
     }
 
@@ -258,6 +300,8 @@ public:
     bool inserirVertice(string label) override {
         vertices.push_back(label);
         lista.push_back(vector<Aresta>()); // Adiciona uma lista vazia para o novo vértice
+
+        qtdVertices += 1;
         return true;
     }
 
@@ -388,6 +432,8 @@ public:
 int main() {
     GrafoMatriz grafoMatriz(false, true);
     grafoMatriz.lerArquivo("teste.txt");
+
+    grafoMatriz.depthFirstSearch(0);
     /*
     // Exemplo com GrafoMatriz
     GrafoMatriz grafoMatriz(false, true); // Cria um grafo não direcionado e ponderado usando matriz de adjacência
