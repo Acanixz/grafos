@@ -210,6 +210,75 @@ public:
         }
     }
 
+    vector<pair<int, vector<int>>> dijkstra(int verticeOrigem) {
+        // Verifica se o grafo é ponderado
+        if (!ponderado) {
+            cout << "Dijkstra requer um grafo ponderado!" << endl;
+            return {};
+        }
+    
+        // Inicializa distâncias com infinito e caminhos vazios
+        vector<int> distancias(qtdVertices, INT_MAX);
+        vector<vector<int>> caminhos(qtdVertices);
+        vector<bool> visitado(qtdVertices, false);
+    
+        // A distância para o próprio vértice de origem é 0
+        distancias[verticeOrigem] = 0;
+        caminhos[verticeOrigem].push_back(verticeOrigem);
+    
+        // Fila de prioridade para processar os vértices (distância, vértice)
+        priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> fila;
+        fila.push({0, verticeOrigem});
+    
+        while (!fila.empty()) {
+            // Extrai o vértice com menor distância atual
+            int u = fila.top().second;
+            fila.pop();
+    
+            // Se já foi visitado, pula
+            if (visitado[u]) continue;
+            visitado[u] = true;
+    
+            // Para cada vizinho do vértice atual
+            for (int v : retornarVizinhos(u)) {
+                float peso = pesoAresta(u, v);
+                
+                // Relaxamento da aresta
+                if (distancias[v] > distancias[u] + peso) {
+                    distancias[v] = distancias[u] + peso;
+                    caminhos[v] = caminhos[u]; // Copia o caminho até u
+                    caminhos[v].push_back(v);  // Adiciona v ao caminho
+                    fila.push({distancias[v], v});
+                }
+            }
+        }
+
+        //Implementação do Dijkstra
+        // Prepara o resultado (distância e caminho para cada vértice)
+        vector<pair<int, vector<int>>> resultado;
+        for (int i = 0; i < qtdVertices; i++) {
+            resultado.emplace_back(distancias[i], caminhos[i]);
+        }
+    
+        // Imprime os resultados
+        cout << "\nResultados do Dijkstra a partir do vertice " << verticeOrigem << ":\n";
+        for (int i = 0; i < qtdVertices; i++) {
+            cout << "Vertice " << i << ": ";
+            if (distancias[i] == INT_MAX) {
+                cout << "Inalcançavel";
+            } else {
+                cout << "Distancia = " << distancias[i] << ", Caminho = ";
+                for (int v : caminhos[i]) {
+                    cout << v;
+                    if (v != caminhos[i].back()) cout << " -> ";
+                }
+            }
+            cout << endl;
+        }
+    
+        return resultado;
+    }
+
     // Métodos virtuais que deverão ser implementados nas classes derivadas
     virtual bool inserirVertice(string label) = 0;
     virtual bool removerVertice(int indice) = 0;
@@ -555,6 +624,7 @@ int main()
     grafoMatriz.lerArquivo("teste.txt");
     grafoMatriz.breadthFirstSearch(0);
     grafoMatriz.depthFirstSearch(0);
+    grafoMatriz.dijkstra(0);
     /*
     // Exemplo com GrafoMatriz
     GrafoMatriz grafoMatriz(false, true); // Cria um grafo não direcionado e ponderado usando matriz de adjacência
