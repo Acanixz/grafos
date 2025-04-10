@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <sstream>
 #include <queue>
+#include <climits>
 using namespace std;
 
 // Classe base abstrata para grafos
@@ -621,7 +622,7 @@ public:
 int main()
 {
     GrafoMatriz grafoMatriz(false, true);
-    grafoMatriz.lerArquivo("teste.txt");
+    grafoMatriz.lerArquivo("Teste.txt");
     grafoMatriz.breadthFirstSearch(0);
     grafoMatriz.depthFirstSearch(0);
     grafoMatriz.dijkstra(0);
