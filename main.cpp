@@ -4,6 +4,7 @@
 //      Hérick Vitor Vieira Bittencourt
 //      Rodrigo Rey de Oliveira Carrard
 //      Paola Piran Zanella
+//      Cauã Domingos
 
 #include <iostream>
 #include <fstream>
@@ -87,7 +88,8 @@ public:
                 stringstream linhaStringStream(linha);
 
                 string tmp_vertice_origem, tmp_vertice_destino;
-                int vertice_origem, vertice_destino, aresta_peso;
+                int vertice_origem, vertice_destino;
+                float aresta_peso;
 
                 // Obtém variaveis através da separação de espaços
                 getline(linhaStringStream, tmp_vertice_origem, ' ');
@@ -217,33 +219,33 @@ public:
             cout << "Dijkstra requer um grafo ponderado!" << endl;
             return {};
         }
-    
+
         // Inicializa distâncias com infinito e caminhos vazios
         vector<int> distancias(qtdVertices, INT_MAX);
         vector<vector<int>> caminhos(qtdVertices);
         vector<bool> visitado(qtdVertices, false);
-    
+
         // A distância para o próprio vértice de origem é 0
         distancias[verticeOrigem] = 0;
         caminhos[verticeOrigem].push_back(verticeOrigem);
-    
+
         // Fila de prioridade para processar os vértices (distância, vértice)
         priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> fila;
         fila.push({0, verticeOrigem});
-    
+
         while (!fila.empty()) {
             // Extrai o vértice com menor distância atual
             int u = fila.top().second;
             fila.pop();
-    
+
             // Se já foi visitado, pula
             if (visitado[u]) continue;
             visitado[u] = true;
-    
+
             // Para cada vizinho do vértice atual
             for (int v : retornarVizinhos(u)) {
                 float peso = pesoAresta(u, v);
-                
+
                 // Relaxamento da aresta
                 if (distancias[v] > distancias[u] + peso) {
                     distancias[v] = distancias[u] + peso;
@@ -260,7 +262,7 @@ public:
         for (int i = 0; i < qtdVertices; i++) {
             resultado.emplace_back(distancias[i], caminhos[i]);
         }
-    
+
         // Imprime os resultados
         cout << "\nResultados do Dijkstra a partir do vertice " << verticeOrigem << ":\n";
         for (int i = 0; i < qtdVertices; i++) {
@@ -276,7 +278,7 @@ public:
             }
             cout << endl;
         }
-    
+
         return resultado;
     }
 
@@ -285,7 +287,7 @@ public:
     virtual bool removerVertice(int indice) = 0;
     virtual string labelVertice(int indice) = 0;
     virtual void imprimeGrafo() = 0;
-    virtual bool inserirAresta(int origem, int destino, int peso = 1) = 0;
+    virtual bool inserirAresta(int origem, int destino, float peso = 1.0) = 0;
     virtual bool removerAresta(int origem, int destino) = 0;
     virtual bool existeAresta(int origem, int destino) = 0;
     virtual float pesoAresta(int origem, int destino) = 0;
@@ -296,7 +298,7 @@ public:
 struct Aresta
 {
     int destino; // Índice do vértice de destino
-    int peso;    // Peso da aresta
+    float peso;    // Peso da aresta
     Aresta(int d, int p) : destino(d), peso(p) {}
 };
 
@@ -304,7 +306,7 @@ struct Aresta
 class GrafoMatriz : public Grafos
 {
 private:
-    vector<vector<int>> matriz; // Matriz de adjacência para armazenar arestas e pesos
+    vector<vector<float>> matriz; // Matriz de adjacência para armazenar arestas e pesos
     vector<string> vertices;    // Vetor para armazenar os rótulos dos vértices
 
 public:
@@ -323,7 +325,7 @@ public:
         }
 
         // Adiciona uma nova linha com 0s equivalente a qtd. de vertices
-        matriz.push_back(vector<int>(vertices.size(), 0)); // Nova linha para o novo vértice
+        matriz.push_back(vector<float>(vertices.size(), 0)); // Nova linha para o novo vértice
         qtdVertices += 1;
         return true;
     }
@@ -373,7 +375,7 @@ public:
     }
 
     // Insere uma aresta entre dois vértices, atribuindo o peso fornecido
-    bool inserirAresta(int origem, int destino, int peso = 1) override
+    bool inserirAresta(int origem, int destino, float peso = 1) override
     {
         // Validação dos índices de origem e destino
         if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size())
@@ -524,7 +526,7 @@ public:
     }
 
     // Insere uma aresta entre dois vértices na lista de adjacência, adicionando aresta inversa se necessário
-    bool inserirAresta(int origem, int destino, int peso = 1) override
+    bool inserirAresta(int origem, int destino, float peso = 1) override
     {
         // Verifica se os índices dos vértices são válidos
         if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size())
@@ -622,10 +624,11 @@ public:
 int main()
 {
     GrafoMatriz grafoMatriz(false, true);
-    grafoMatriz.lerArquivo("Teste.txt");
+    grafoMatriz.lerArquivo("slides_modificado.txt");
     grafoMatriz.breadthFirstSearch(0);
     grafoMatriz.depthFirstSearch(0);
     grafoMatriz.dijkstra(0);
+
     /*
     // Exemplo com GrafoMatriz
     GrafoMatriz grafoMatriz(false, true); // Cria um grafo não direcionado e ponderado usando matriz de adjacência
