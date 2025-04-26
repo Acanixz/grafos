@@ -6,6 +6,10 @@
 //      Paola Piran Zanella
 //      Cauã Domingos
 
+// TODO: Garantir que o arquivo slides_modificado.txt pode ser lido
+// (Possivelmente os pesos arrendondam pra zero ao ler o arquivo, confira 
+// a tipagem das variaveis)
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -113,6 +117,7 @@ public:
                 }
             }
 
+            cout << "Leitura concluida com exito\n" << endl;
             return true;
         }
         catch (exception &e)
@@ -219,33 +224,33 @@ public:
             cout << "Dijkstra requer um grafo ponderado!" << endl;
             return {};
         }
-
+    
         // Inicializa distâncias com infinito e caminhos vazios
         vector<int> distancias(qtdVertices, INT_MAX);
         vector<vector<int>> caminhos(qtdVertices);
         vector<bool> visitado(qtdVertices, false);
-
+    
         // A distância para o próprio vértice de origem é 0
         distancias[verticeOrigem] = 0;
         caminhos[verticeOrigem].push_back(verticeOrigem);
-
+    
         // Fila de prioridade para processar os vértices (distância, vértice)
         priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> fila;
         fila.push({0, verticeOrigem});
-
+    
         while (!fila.empty()) {
             // Extrai o vértice com menor distância atual
             int u = fila.top().second;
             fila.pop();
-
+    
             // Se já foi visitado, pula
             if (visitado[u]) continue;
             visitado[u] = true;
-
+    
             // Para cada vizinho do vértice atual
             for (int v : retornarVizinhos(u)) {
                 float peso = pesoAresta(u, v);
-
+                
                 // Relaxamento da aresta
                 if (distancias[v] > distancias[u] + peso) {
                     distancias[v] = distancias[u] + peso;
@@ -262,7 +267,7 @@ public:
         for (int i = 0; i < qtdVertices; i++) {
             resultado.emplace_back(distancias[i], caminhos[i]);
         }
-
+    
         // Imprime os resultados
         cout << "\nResultados do Dijkstra a partir do vertice " << verticeOrigem << ":\n";
         for (int i = 0; i < qtdVertices; i++) {
@@ -278,7 +283,7 @@ public:
             }
             cout << endl;
         }
-
+    
         return resultado;
     }
 
@@ -365,7 +370,7 @@ public:
         cout << "Matriz de Adjacência:" << endl;
         for (size_t i = 0; i < vertices.size(); i++)
         {
-            cout << vertices[i] << ": ";
+            cout << "V" << i << ": ";
             for (size_t j = 0; j < vertices.size(); j++)
             {
                 cout << matriz[i][j] << " ";
@@ -624,11 +629,12 @@ public:
 int main()
 {
     GrafoMatriz grafoMatriz(false, true);
-    grafoMatriz.lerArquivo("slides_modificado.txt");
+    grafoMatriz.lerArquivo("slides.txt");
+    grafoMatriz.imprimeGrafo();
     grafoMatriz.breadthFirstSearch(0);
     grafoMatriz.depthFirstSearch(0);
     grafoMatriz.dijkstra(0);
-
+    
     /*
     // Exemplo com GrafoMatriz
     GrafoMatriz grafoMatriz(false, true); // Cria um grafo não direcionado e ponderado usando matriz de adjacência
