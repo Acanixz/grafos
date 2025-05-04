@@ -6,10 +6,6 @@
 //      Paola Piran Zanella
 //      Cauã Domingos
 
-// TODO: Garantir que o arquivo slides_modificado.txt pode ser lido
-// (Possivelmente os pesos arrendondam pra zero ao ler o arquivo, confira 
-// a tipagem das variaveis)
-
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -105,7 +101,7 @@ public:
                 {
                     string tmp_aresta_peso;
                     getline(linhaStringStream, tmp_aresta_peso, ' ');
-                    aresta_peso = stoi(tmp_aresta_peso);
+                    aresta_peso = stof(tmp_aresta_peso);
                 }
 
                 inserirAresta(vertice_origem, vertice_destino, aresta_peso);
@@ -304,7 +300,7 @@ struct Aresta
 {
     int destino; // Índice do vértice de destino
     float peso;    // Peso da aresta
-    Aresta(int d, int p) : destino(d), peso(p) {}
+    Aresta(int d, float p) : destino(d), peso(p) {}
 };
 
 // Implementação usando matriz de adjacência
@@ -380,7 +376,7 @@ public:
     }
 
     // Insere uma aresta entre dois vértices, atribuindo o peso fornecido
-    bool inserirAresta(int origem, int destino, float peso = 1) override
+    bool inserirAresta(int origem, int destino, float peso = 1.0) override
     {
         // Validação dos índices de origem e destino
         if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size())
@@ -531,7 +527,7 @@ public:
     }
 
     // Insere uma aresta entre dois vértices na lista de adjacência, adicionando aresta inversa se necessário
-    bool inserirAresta(int origem, int destino, float peso = 1) override
+    bool inserirAresta(int origem, int destino, float peso = 1.0) override
     {
         // Verifica se os índices dos vértices são válidos
         if (origem < 0 || origem >= vertices.size() || destino < 0 || destino >= vertices.size())
@@ -629,11 +625,11 @@ public:
 int main()
 {
     GrafoMatriz grafoMatriz(false, true);
-    grafoMatriz.lerArquivo("slides.txt");
+    grafoMatriz.lerArquivo("espacoaereo.txt");
     grafoMatriz.imprimeGrafo();
-    grafoMatriz.breadthFirstSearch(0);
-    grafoMatriz.depthFirstSearch(0);
-    grafoMatriz.dijkstra(0);
+    grafoMatriz.breadthFirstSearch(4);
+    grafoMatriz.depthFirstSearch(4);
+    grafoMatriz.dijkstra(4);
     
     /*
     // Exemplo com GrafoMatriz
