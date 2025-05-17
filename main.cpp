@@ -13,6 +13,9 @@
 #include <sstream>
 #include <queue>
 #include <climits>
+#include <chrono>
+#include <set>
+#include <functional>
 using namespace std;
 
 // Classe base abstrata para grafos
@@ -118,7 +121,7 @@ public:
         }
         catch (exception &e)
         {
-            cout << "Não foi possivel ler o arquivo: " << filePath << "\nMotivo: " << e.what() << endl;
+            cout << "Nao foi possivel ler o arquivo: " << filePath << "\nMotivo: " << e.what() << endl;
         }
         return false;
     }
@@ -269,7 +272,7 @@ public:
         for (int i = 0; i < qtdVertices; i++) {
             cout << "Vertice " << i << ": ";
             if (distancias[i] == INT_MAX) {
-                cout << "Inalcançavel";
+                cout << "Inalcancavel";
             } else {
                 cout << "Distancia = " << distancias[i] << ", Caminho = ";
                 for (int v : caminhos[i]) {
@@ -281,6 +284,134 @@ public:
         }
     
         return resultado;
+    }
+
+    bool coloracao_valida(const vector<int>& cores) {
+        for (int vertice = 0; vertice < qtdVertices; vertice++) {
+            for (int outraV : retornarVizinhos(vertice)) {
+                if (cores[vertice] == cores[outraV]) return false;
+            }
+        }
+        return true;
+    }
+
+    void coloracao_bruta() {
+        cout << "-- Coloracao Forca Bruta --" << endl;
+        auto t0 = chrono::high_resolution_clock::now();
+        vector<int> cores(qtdVertices, 0);
+        int sol_k = 0;
+        // tenta números de cores de 1 até qtdVertices
+        for (int k = 1; k <= qtdVertices; ++k) {
+            // todas as combinações: cada vértice em [1..k]
+            function<bool(int)> backtrack = [&](int idx) {
+                if (idx == qtdVertices) {
+                    if (coloracao_valida(cores)) return true;
+                    return false;
+                }
+                for (int c = 1; c <= k; ++c) {
+                    cores[idx] = c;
+                    if (backtrack(idx + 1)) return true;
+                }
+                return false;
+            };
+            if (backtrack(0)) {
+                sol_k = k;
+                break;
+            }
+        }
+        auto t1 = chrono::high_resolution_clock::now();
+        auto dur = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
+        cout << "Cores usadas: " << sol_k << " | Tempo: " << dur << " ms" << endl;
+        if (qtdVertices < 10) {
+            cout << "Atribuicoes: ";
+            for (int i = 0; i < qtdVertices; ++i)
+                cout << i << ":" << cores[i] << " ";
+            cout << endl;
+        }
+    }
+
+    void coloracao_welshpowell() {
+        cout << "-- Coloracao Welsh-Powell --" << endl;
+        auto t0 = chrono::high_resolution_clock::now();
+        vector<pair<int,int>> grau_idx;
+        for (int u = 0; u < qtdVertices; ++u) {
+            grau_idx.emplace_back(retornarVizinhos(u).size(), u);
+        }
+        sort(grau_idx.rbegin(), grau_idx.rend()); // decrescente
+        vector<int> cores(qtdVertices, 0);
+        int proxima_cor = 1;
+        for (int i = 0; i < qtdVertices; ++i) {
+            int u = grau_idx[i].second;
+            if (cores[u] != 0) continue;
+            // tenta colorir todos restantes com cor atual
+            cores[u] = proxima_cor;
+            for (int j = i+1; j < qtdVertices; ++j) {
+                int v = grau_idx[j].second;
+                if (cores[v] == 0) {
+                    bool ok = true;
+                    for (int w : retornarVizinhos(v)) {
+                        if (cores[w] == proxima_cor) { ok = false; break; }
+                    }
+                    if (ok) cores[v] = proxima_cor;
+                }
+            }
+            proxima_cor++;
+        }
+        auto t1 = chrono::high_resolution_clock::now();
+        auto dur = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
+        int cores_usadas = *max_element(cores.begin(), cores.end());
+        cout << "Cores usadas: " << cores_usadas << " | Tempo: " << dur << " ms" << endl;
+        if (qtdVertices < 10) {
+            cout << "Atribuicoes: ";
+            for (int i = 0; i < qtdVertices; ++i)
+                cout << i << ":" << cores[i] << " ";
+            cout << endl;
+        }
+    }
+
+    void coloracao_DSATUR() {
+        cout << "-- Coloracao DSATUR --" << endl;
+        auto t0 = chrono::high_resolution_clock::now();
+        vector<int> cores(qtdVertices, 0);
+        vector<set<int>> neigh_colors(qtdVertices);
+        vector<int> grau(qtdVertices);
+        for (int u = 0; u < qtdVertices; ++u) {
+            grau[u] = retornarVizinhos(u).size();
+        }
+        // inicial: escolhe maior grau
+        int u0 = max_element(grau.begin(), grau.end()) - grau.begin();
+        cores[u0] = 1;
+        for (int v : retornarVizinhos(u0))
+            neigh_colors[v].insert(1);
+        // itera até colorir todos
+        for (int count = 1; count < qtdVertices; ++count) {
+            // escolhe vértice sem cor de maior saturação (tamanho de neigh_colors), tie-breaker grau
+            int best = -1;
+            pair<int,int> best_key = {-1,-1};
+            for (int u = 0; u < qtdVertices; ++u) {
+                if (cores[u] == 0) {
+                    int sat = neigh_colors[u].size();
+                    pair<int,int> key = {sat, grau[u]};
+                    if (key > best_key) { best_key = key; best = u; }
+                }
+            }
+            // atribui menor cor não em neigh_colors[best]
+            int c = 1;
+            while (neigh_colors[best].count(c)) ++c;
+            cores[best] = c;
+            for (int v : retornarVizinhos(best))
+                neigh_colors[v].insert(c);
+        }
+        auto t1 = chrono::high_resolution_clock::now();
+        auto dur = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
+        int cores_usadas = *max_element(cores.begin(), cores.end());
+        cout << "Cores usadas: " << cores_usadas << " | Tempo: " << dur << " ms" << endl;
+        if (qtdVertices < 10) {
+            cout << "Atribuicoes: ";
+            for (int i = 0; i < qtdVertices; ++i)
+                cout << i << ":" << cores[i] << " ";
+            cout << endl;
+        }
     }
 
     // Métodos virtuais que deverão ser implementados nas classes derivadas
@@ -624,13 +755,15 @@ public:
 // Função principal para testar as implementações dos grafos
 int main()
 {
+    /*
     GrafoMatriz grafoMatriz(false, true);
     grafoMatriz.lerArquivo("espacoaereo.txt");
     grafoMatriz.imprimeGrafo();
     grafoMatriz.breadthFirstSearch(4);
     grafoMatriz.depthFirstSearch(4);
     grafoMatriz.dijkstra(4);
-    
+    */
+
     /*
     // Exemplo com GrafoMatriz
     GrafoMatriz grafoMatriz(false, true); // Cria um grafo não direcionado e ponderado usando matriz de adjacência
@@ -651,5 +784,14 @@ int main()
     grafoLista.imprimeGrafo();              // Exibe o grafo em forma de lista de adjacência
     */
 
+    // Exemplo simples
+    GrafoLista G(false, false);
+    for (int i = 0; i < 5; ++i) G.inserirVertice("v");
+    G.inserirAresta(0,1); G.inserirAresta(0,2); G.inserirAresta(1,2);
+    G.inserirAresta(1,3); G.inserirAresta(2,4);
+
+    G.coloracao_bruta();
+    G.coloracao_welshpowell();
+    G.coloracao_DSATUR();
     return 0;
 }
