@@ -296,7 +296,7 @@ public:
     }
 
     void coloracao_bruta() {
-        cout << "-- Coloracao Forca Bruta --" << endl;
+        cout << "\nColoracao Forca Bruta" << endl;
         auto t0 = chrono::high_resolution_clock::now();
         vector<int> cores(qtdVertices, 0);
         int sol_k = 0;
@@ -331,7 +331,7 @@ public:
     }
 
     void coloracao_welshpowell() {
-        cout << "-- Coloracao Welsh-Powell --" << endl;
+        cout << "\nColoracao Welsh-Powell" << endl;
         auto t0 = chrono::high_resolution_clock::now();
         vector<pair<int,int>> grau_idx;
         for (int u = 0; u < qtdVertices; ++u) {
@@ -370,7 +370,7 @@ public:
     }
 
     void coloracao_DSATUR() {
-        cout << "-- Coloracao DSATUR --" << endl;
+        cout << "\nColoracao DSATUR" << endl;
         auto t0 = chrono::high_resolution_clock::now();
         vector<int> cores(qtdVertices, 0);
         vector<set<int>> neigh_colors(qtdVertices);
@@ -413,6 +413,39 @@ public:
             cout << endl;
         }
     }
+
+    void coloracao_sequencial() {
+        cout << "\nColoracao Sequencial (sem criterio de ordem)" << endl;
+        auto t0 = chrono::high_resolution_clock::now();
+
+        // vetor 1..cores, 0 = sem cor
+        vector<int> cores(qtdVertices, 0);
+
+        for (int u = 0; u < qtdVertices; ++u) {
+            set<int> usadas;
+            for (int w : retornarVizinhos(u)) {
+                if (cores[w] != 0)
+                    usadas.insert(cores[w]);
+            }
+            int cor = 1;
+            while (usadas.count(cor)) ++cor;
+            cores[u] = cor;
+        }
+
+        auto t1 = chrono::high_resolution_clock::now();
+        auto dur = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
+        int total = *max_element(cores.begin(), cores.end());
+        cout << "Cores usadas: " << total << " | Tempo: " << dur << " ms" << endl;
+
+        if (qtdVertices < 10) {
+            cout << "Atribuicoes: ";
+            for (int i = 0; i < qtdVertices; ++i)
+                cout << i << ":" << cores[i] << " ";
+            cout << endl;
+        }
+    }
+
+
 
     // Métodos virtuais que deverão ser implementados nas classes derivadas
     virtual bool inserirVertice(string label) = 0;
@@ -793,5 +826,6 @@ int main()
     G.coloracao_bruta();
     G.coloracao_welshpowell();
     G.coloracao_DSATUR();
+    G.coloracao_sequencial();
     return 0;
 }
