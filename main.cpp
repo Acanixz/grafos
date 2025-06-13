@@ -15,6 +15,7 @@
 #include <climits>
 #include <chrono>
 #include <set>
+#include <stack>
 #include <functional>
 using namespace std;
 
@@ -25,6 +26,9 @@ public:
     bool direcionado; // Indica se o grafo é direcionado
     bool ponderado;   // Indica se o grafo possui pesos nas arestas
     int qtdVertices = 0;
+    virtual vector<int> encontrarCaminhoAumentante(int origem, int destino) = 0;
+    virtual int fordFulkerson(int origem, int destino) = 0;
+    virtual pair<int, int> buscaLocalFluxoMaximo(int origem, int destino) = 0;
 
     // Construtor
     Grafos(bool Direcionado, bool Ponderado)
@@ -783,41 +787,190 @@ public:
         }
         return vizinhos;
     }
+
+    // Implementação do método para encontrar caminho aumentante usando DFS
+    vector<int> encontrarCaminhoAumentante(int origem, int destino) override {
+        vector<bool> visitado(qtdVertices, false);
+        vector<int> caminho;
+        vector<int> parent(qtdVertices, -1);
+        
+        stack<int> pilha;
+        pilha.push(origem);
+        visitado[origem] = true;
+        
+        while (!pilha.empty()) {
+            int u = pilha.top();
+            pilha.pop();
+            
+            if (u == destino) {
+                // Reconstruir o caminho
+                int v = destino;
+                while (v != origem) {
+                    caminho.insert(caminho.begin(), v);
+                    v = parent[v];
+                }
+                caminho.insert(caminho.begin(), origem);
+                return caminho;
+            }
+            
+            for (const Aresta& aresta : lista[u]) {
+                int v = aresta.destino;
+                if (!visitado[v] && aresta.peso > 0) {
+                    visitado[v] = true;
+                    parent[v] = u;
+                    pilha.push(v);
+                }
+            }
+        }
+        
+        return {}; // Retorna vazio se não encontrar caminho
+    }
+
+    // Implementação do algoritmo Ford-Fulkerson
+    int fordFulkerson(int origem, int destino) override {
+        // Criar uma cópia do grafo original para trabalhar com capacidades residuais
+        GrafoLista grafoResidual(this->direcionado, this->ponderado);
+        for (int i = 0; i < qtdVertices; i++) {
+            grafoResidual.inserirVertice(labelVertice(i));
+        }
+        
+        // Inicializar grafo residual com capacidades originais
+        for (int u = 0; u < qtdVertices; u++) {
+            for (const Aresta& aresta : lista[u]) {
+                int v = aresta.destino;
+                float capacidade = aresta.peso;
+                grafoResidual.inserirAresta(u, v, capacidade);
+                if (!direcionado) {
+                    grafoResidual.inserirAresta(v, u, 0); // Aresta reversa inicialmente com 0
+                }
+            }
+        }
+        
+        int fluxoMaximo = 0;
+        
+        while (true) {
+            // Encontrar caminho aumentante usando DFS
+            vector<int> caminho = grafoResidual.encontrarCaminhoAumentante(origem, destino);
+            
+            if (caminho.empty()) {
+                break; // Não há mais caminhos aumentantes
+            }
+            
+            // Encontrar capacidade residual mínima no caminho
+            float capacidadeMinima = numeric_limits<float>::max();
+            for (size_t i = 0; i < caminho.size() - 1; i++) {
+                int u = caminho[i];
+                int v = caminho[i+1];
+                float capacidade = grafoResidual.pesoAresta(u, v);
+                if (capacidade < capacidadeMinima) {
+                    capacidadeMinima = capacidade;
+                }
+            }
+            
+            // Atualizar capacidades residuais
+            for (size_t i = 0; i < caminho.size() - 1; i++) {
+                int u = caminho[i];
+                int v = caminho[i+1];
+                
+                // Atualizar aresta direta
+                float capacidadeAtual = grafoResidual.pesoAresta(u, v);
+                grafoResidual.removerAresta(u, v);
+                grafoResidual.inserirAresta(u, v, capacidadeAtual - capacidadeMinima);
+                
+                // Atualizar aresta reversa
+                float capacidadeReversa = grafoResidual.pesoAresta(v, u);
+                grafoResidual.removerAresta(v, u);
+                grafoResidual.inserirAresta(v, u, capacidadeReversa + capacidadeMinima);
+            }
+            
+            fluxoMaximo += capacidadeMinima;
+        }
+        
+        return fluxoMaximo;
+    }
+
+    // Implementação da busca local para otimizar o fluxo máximo
+    pair<int, int> buscaLocalFluxoMaximo(int origem, int destino) override {
+        // Fluxo máximo da solução inicial
+        int fluxoInicial = fordFulkerson(origem, destino);
+        int fluxoAtual = fluxoInicial;
+        int passos = 0;
+        
+        // Criar cópia do grafo original para modificações
+        GrafoLista melhorGrafo = *this;
+        
+        bool melhorou;
+        do {
+            melhorou = false;
+            
+            // Gerar vizinhos invertendo direção de cada aresta
+            for (int u = 0; u < qtdVertices; u++) {
+                vector<Aresta> arestas = lista[u]; // Copia para iterar
+                for (const Aresta& aresta : arestas) {
+                    int v = aresta.destino;
+                    
+                    // Criar vizinho invertendo a aresta u->v
+                    GrafoLista vizinho = melhorGrafo;
+                    vizinho.removerAresta(u, v);
+                    vizinho.inserirAresta(v, u, aresta.peso);
+                    
+                    // Calcular fluxo máximo do vizinho
+                    int fluxoVizinho = vizinho.fordFulkerson(origem, destino);
+                    passos++;
+                    
+                    // Se melhorou, atualizar melhor solução
+                    if (fluxoVizinho > fluxoAtual) {
+                        fluxoAtual = fluxoVizinho;
+                        melhorGrafo = vizinho;
+                        melhorou = true;
+                        break; // Primeira melhora (estratégia greedy)
+                    }
+                }
+                if (melhorou) break;
+            }
+        } while (melhorou);
+        
+        cout << "Número de passos: " << passos << endl;
+        return make_pair(fluxoInicial, fluxoAtual);
+    }
 };
 
 // Função principal para testar as implementações dos grafos
 int main()
 {
-    /*
-    GrafoMatriz grafoMatriz(false, true);
-    grafoMatriz.lerArquivo("espacoaereo.txt");
-    grafoMatriz.imprimeGrafo();
-    grafoMatriz.breadthFirstSearch(4);
-    grafoMatriz.depthFirstSearch(4);
-    grafoMatriz.dijkstra(4);
-    */
-
-    /*
-    // Exemplo com GrafoMatriz
-    GrafoMatriz grafoMatriz(false, true); // Cria um grafo não direcionado e ponderado usando matriz de adjacência
-    grafoMatriz.inserirVertice("A");
-    grafoMatriz.inserirVertice("B");
-    grafoMatriz.inserirVertice("C");
-    grafoMatriz.inserirAresta(0, 1, 5);       // Insere aresta de A para B com peso 5
-    grafoMatriz.inserirAresta(1, 2, 3);       // Insere aresta de B para C com peso 3
-    grafoMatriz.imprimeGrafo();
-
-    // Exemplo com GrafoLista
-    GrafoLista grafoLista(true, false);     // Cria um grafo direcionado e não ponderado usando lista de adjacência
-    grafoLista.inserirVertice("X");
-    grafoLista.inserirVertice("Y");
-    grafoLista.inserirVertice("Z");
-    grafoLista.inserirAresta(0, 1);         // Insere aresta de X para Y
-    grafoLista.inserirAresta(1, 2);         // Insere aresta de Y para Z
-    grafoLista.imprimeGrafo();              // Exibe o grafo em forma de lista de adjacência
-    */
-
-    // Exemplo simples
+    // Exemplo de grafo para fluxo máximo
+    GrafoLista grafoFluxo(true, true); // Grafo direcionado e ponderado
+    
+    // Adicionar vértices
+    for (int i = 0; i < 6; i++) {
+        grafoFluxo.inserirVertice("v" + to_string(i));
+    }
+    
+    // Adicionar arestas (origem, destino, capacidade)
+    grafoFluxo.inserirAresta(0, 1, 16);
+    grafoFluxo.inserirAresta(0, 2, 13);
+    grafoFluxo.inserirAresta(1, 2, 10);
+    grafoFluxo.inserirAresta(1, 3, 12);
+    grafoFluxo.inserirAresta(2, 1, 4);
+    grafoFluxo.inserirAresta(2, 4, 14);
+    grafoFluxo.inserirAresta(3, 2, 9);
+    grafoFluxo.inserirAresta(3, 5, 20);
+    grafoFluxo.inserirAresta(4, 3, 7);
+    grafoFluxo.inserirAresta(4, 5, 4);
+    
+    int origem = 0;
+    int destino = 5;
+    
+    // Calcular fluxo máximo inicial
+    int fluxoInicial = grafoFluxo.fordFulkerson(origem, destino);
+    cout << "Fluxo máximo inicial: " << fluxoInicial << endl;
+    
+    // Otimizar com busca local
+    auto resultado = grafoFluxo.buscaLocalFluxoMaximo(origem, destino);
+    cout << "Resultado da busca local:" << endl;
+    cout << "Fluxo inicial: " << resultado.first << endl;
+    cout << "Fluxo final: " << resultado.second << endl;
+    
     GrafoLista G(false, false);
     for (int i = 0; i < 5; ++i) G.inserirVertice("v");
     G.inserirAresta(0,1); G.inserirAresta(0,2); G.inserirAresta(1,2);
