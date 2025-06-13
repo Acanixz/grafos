@@ -840,9 +840,9 @@ public:
                 int v = aresta.destino;
                 float capacidade = aresta.peso;
                 grafoResidual.inserirAresta(u, v, capacidade);
-                if (!direcionado) {
+                //if (!direcionado) {
                     grafoResidual.inserirAresta(v, u, 0); // Aresta reversa inicialmente com 0
-                }
+                //}
             }
         }
         
@@ -930,7 +930,7 @@ public:
             }
         } while (melhorou);
         
-        cout << "Número de passos: " << passos << endl;
+        cout << "Numero de passos: " << passos << endl;
         return make_pair(fluxoInicial, fluxoAtual);
     }
 };
@@ -963,7 +963,7 @@ int main()
     
     // Calcular fluxo máximo inicial
     int fluxoInicial = grafoFluxo.fordFulkerson(origem, destino);
-    cout << "Fluxo máximo inicial: " << fluxoInicial << endl;
+    cout << "Fluxo maximo inicial: " << fluxoInicial << endl;
     
     // Otimizar com busca local
     auto resultado = grafoFluxo.buscaLocalFluxoMaximo(origem, destino);
@@ -971,14 +971,14 @@ int main()
     cout << "Fluxo inicial: " << resultado.first << endl;
     cout << "Fluxo final: " << resultado.second << endl;
     
-    GrafoLista G(false, false);
-    for (int i = 0; i < 5; ++i) G.inserirVertice("v");
-    G.inserirAresta(0,1); G.inserirAresta(0,2); G.inserirAresta(1,2);
-    G.inserirAresta(1,3); G.inserirAresta(2,4);
+    // GrafoLista G(false, false);
+    // for (int i = 0; i < 5; ++i) G.inserirVertice("v");
+    // G.inserirAresta(0,1); G.inserirAresta(0,2); G.inserirAresta(1,2);
+    // G.inserirAresta(1,3); G.inserirAresta(2,4);
 
-    G.coloracao_bruta();
-    G.coloracao_welshpowell();
-    G.coloracao_DSATUR();
-    G.coloracao_sequencial();
+    // G.coloracao_bruta();
+    // G.coloracao_welshpowell();
+    // G.coloracao_DSATUR();
+    // G.coloracao_sequencial();
     return 0;
 }
