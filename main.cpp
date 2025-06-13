@@ -788,7 +788,7 @@ public:
         return vizinhos;
     }
 
-    // Implementação do método para encontrar caminho aumentante usando DFS
+    // Implementação do metodo para encontrar caminho aumentante usando DFS
     vector<int> encontrarCaminhoAumentante(int origem, int destino) override {
         vector<bool> visitado(qtdVertices, false);
         vector<int> caminho;
