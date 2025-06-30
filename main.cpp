@@ -935,6 +935,7 @@ public:
         return make_pair(fluxoInicial, fluxoAtual);
     }
 
+    // Algoritmo de Prim para para AGM
     void primMST() {
         cout << "\nExecutando PrimMST" << endl;
         auto t0 = chrono::high_resolution_clock::now(); // inicia a contagem de tempo
