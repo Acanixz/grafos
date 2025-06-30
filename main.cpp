@@ -1,4 +1,4 @@
-// Trabalho M2.2
+// Trabalho M3.1 - AGM
 // Grafos 2025 - 1
 // Alunos:
 //      Hérick Vitor Vieira Bittencourt
