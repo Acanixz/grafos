@@ -935,139 +935,137 @@ public:
         return make_pair(fluxoInicial, fluxoAtual);
     }
 
-    // Algoritmo de Prim para AGM
     void primMST() {
         cout << "\nExecutando PrimMST" << endl;
-        auto t0 = chrono::high_resolution_clock::now();
+        auto t0 = chrono::high_resolution_clock::now(); // inicia a contagem de tempo
 
-        vector<bool> inMST(qtdVertices, false);
-        // min-heap de pares (peso, vertice)
-        priority_queue<pair<float,int>, vector<pair<float,int>>, greater<>> pq;
-        // inicia em 0 (ou qualquer vértice)
-        pq.emplace(0.0f, 0);
-
+        // Inicia um conjunto S vazio de arestas para a solução
         float totalPeso = 0.0f;
         int arestasSelecionadas = 0;
 
+        // Inicia um conjunto Q com todos os vértices do grafo para o controle
+        vector<bool> inMST(qtdVertices, false);
+        // fila de prioridade mínima: pares (peso, vértice)
+        priority_queue<pair<float,int>, vector<pair<float,int>>, greater<>> pq;
+
+        // Escolhe um vértice arbitrário A do grafo como vértice inicial
+        // Vertice 0 com prioridade 0
+        pq.emplace(0.0f, 0);
+
+        // Enquanto Q não estiver vazio
         while (!pq.empty() && arestasSelecionadas < qtdVertices - 1) {
+            // Remove A do conjunto Q
             auto [peso, u] = pq.top(); pq.pop();
             if (inMST[u]) continue;
-            inMST[u] = true;
+            inMST[u] = true; // Remove do conjunto Q o vértice desta aresta (u ou v) que pertencia a ele
+
+            // Adiciona a aresta {u, v} para o conjunto solução S
             totalPeso += peso;
             arestasSelecionadas++;
-            // relaxa arestas adjacentes
+
+            // Encontra a menor aresta {u, v}, onde um deles (u ou v) pertence ao conjunto Q e o outro não pertence ao conjunto Q
             for (auto &aresta : lista[u]) {
                 int v = aresta.destino;
                 float w = aresta.peso;
                 if (!inMST[v]) {
-                    pq.emplace(w, v);
+                    pq.emplace(w, v); // adiciona possível nova aresta para análise
                 }
             }
         }
 
-        auto t1 = chrono::high_resolution_clock::now();
+        auto t1 = chrono::high_resolution_clock::now(); // finaliza tempo
         auto dur = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
 
+        // imprime resultado
         cout << "PrimMST - Soma das arestas: " << totalPeso
              << " | Tempo: " << dur << " ms" << endl;
     }
 
+
     // Algoritmo de Kruskal para AGM
     void kruskalMST() {
         cout << "\nExecutando KruskalMST" << endl;
-        auto t0 = chrono::high_resolution_clock::now();
+        auto tempo_inicio = chrono::high_resolution_clock::now();
 
-        // coleta todas as arestas (u,v,peso), sem duplicar em grafo não-direcionado
-        struct Edge { int u, v; float w; };
-        vector<Edge> edges;
-        for (int u = 0; u < qtdVertices; u++) {
-            for (auto &a : lista[u]) {
-                if (u < a.destino) { // evita duplicar (u,v) e (v,u)
-                    edges.push_back({u, a.destino, a.peso});
+        // Inicia um conjunto Q com todas as arestas do grafo para o controle
+        struct Aresta { int origem, destino; float peso; };
+        vector<Aresta> conjuntoArestas;
+        for (int origem = 0; origem < qtdVertices; origem++) {
+            for (auto &a : lista[origem]) {
+                if (origem < a.destino) { // evita duplicar arestas em grafo não direcionado
+                    conjuntoArestas.push_back({origem, a.destino, a.peso});
                 }
             }
         }
-        // ordena por peso
-        sort(edges.begin(), edges.end(),
-             [](const Edge &a, const Edge &b){ return a.w < b.w; });
+        // ordena as arestas por peso crescente
+        sort(conjuntoArestas.begin(), conjuntoArestas.end(),
+             [](const Aresta &a, const Aresta &b){ return a.peso < b.peso; });
 
-        // estrutura Union-Find
-        vector<int> parent(qtdVertices), rank(qtdVertices,0);
-        iota(parent.begin(), parent.end(), 0);
-        function<int(int)> find = [&](int x){
-            return parent[x] == x ? x : parent[x] = find(parent[x]);
+        // Inicia uma floresta (um conjunto de árvores) F com cada vértice isolado sendo uma árvore
+        vector<int> pai(qtdVertices), nivel(qtdVertices,0);
+        iota(pai.begin(), pai.end(), 0);
+        function<int(int)> encontrar = [&](int x){
+            return pai[x] == x ? x : pai[x] = encontrar(pai[x]);
         };
-        auto unite = [&](int x, int y){
-            x = find(x); y = find(y);
+        auto unir = [&](int x, int y){
+            x = encontrar(x); y = encontrar(y);
             if (x == y) return false;
-            if (rank[x] < rank[y]) swap(x,y);
-            parent[y] = x;
-            if (rank[x] == rank[y]) rank[x]++;
+            if (nivel[x] < nivel[y]) swap(x,y);
+            pai[y] = x;
+            if (nivel[x] == nivel[y]) nivel[x]++;
             return true;
         };
 
-        float totalPeso = 0.0f;
-        int count = 0;
-        for (auto &e : edges) {
-            if (unite(e.u, e.v)) {
-                totalPeso += e.w;
-                count++;
-                if (count == qtdVertices - 1) break;
+        // Inicia um conjunto S vazio de arestas para a solução
+        float somaPesos = 0.0f;
+        int totalArestas = 0;
+
+        // Enquanto Q não estiver vazio {
+        for (auto &aresta : conjuntoArestas) {
+            // Seleciona a menor aresta {u, v} do conjunto Q
+            // Remove a aresta {u, v} do conjunto Q
+
+            // Se u e v pertencem a árvores diferentes no conjunto F {
+            if (unir(aresta.origem, aresta.destino)) {
+                // Adiciona a aresta {u, v} para o conjunto S
+                somaPesos += aresta.peso;
+                totalArestas++;
+
+                // Une o conjunto das árvores que contêm u e que contêm v no conjunto F
+                if (totalArestas == qtdVertices - 1) break;
             }
         }
+        // }
 
-        auto t1 = chrono::high_resolution_clock::now();
-        auto dur = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
+        auto tempo_fim = chrono::high_resolution_clock::now();
+        auto duracao = chrono::duration_cast<chrono::milliseconds>(tempo_fim - tempo_inicio).count();
 
-        cout << "KruskalMST - Soma das arestas: " << totalPeso
-             << " | Tempo: " << dur << " ms" << endl;
+        cout << "KruskalMST - Soma das arestas: " << somaPesos
+             << " | Tempo: " << duracao << " ms" << endl;
     }
 };
 
 // Função principal para testar as implementações dos grafos
 int main()
 {
-    // Exemplo de grafo para fluxo máximo
-    GrafoLista grafoFluxo(true, true); // Grafo direcionado e ponderado
-    
-    // Adicionar vértices
-    for (int i = 0; i < 6; i++) {
-        grafoFluxo.inserirVertice("v" + to_string(i));
-    }
-    
-    // Adicionar arestas (origem, destino, capacidade)
-    grafoFluxo.inserirAresta(0, 1, 16);
-    grafoFluxo.inserirAresta(0, 2, 13);
-    grafoFluxo.inserirAresta(1, 2, 10);
-    grafoFluxo.inserirAresta(1, 3, 12);
-    grafoFluxo.inserirAresta(2, 1, 4);
-    grafoFluxo.inserirAresta(2, 4, 14);
-    grafoFluxo.inserirAresta(3, 2, 9);
-    grafoFluxo.inserirAresta(3, 5, 20);
-    grafoFluxo.inserirAresta(4, 3, 7);
-    grafoFluxo.inserirAresta(4, 5, 4);
-    
-    int origem = 0;
-    int destino = 5;
-    
-    // Calcular fluxo máximo inicial
-    int fluxoInicial = grafoFluxo.fordFulkerson(origem, destino);
-    cout << "Fluxo maximo inicial: " << fluxoInicial << endl;
-    
-    // Otimizar com busca local
-    auto resultado = grafoFluxo.buscaLocalFluxoMaximo(origem, destino);
-    cout << "Resultado da busca local:" << endl;
-    cout << "Fluxo inicial: " << resultado.first << endl;
-    cout << "Fluxo final: " << resultado.second << endl;
-    
-    // GrafoLista G(false, false);
-    // for (int i = 0; i < 5; ++i) G.inserirVertice("v");
-    // G.inserirAresta(0,1); G.inserirAresta(0,2); G.inserirAresta(1,2);
-    // G.inserirAresta(1,3); G.inserirAresta(2,4);
+    GrafoLista G(false, true); // Grafo direcionado e ponderado
+    G.inserirVertice("1");
+    G.inserirVertice("2");
+    G.inserirVertice("3");
+    G.inserirVertice("4");
 
-    // G.coloracao_bruta();
-    // G.coloracao_welshpowell();
-    // G.coloracao_DSATUR();
-    // G.coloracao_sequencial();
+    G.inserirAresta(0, 1, 2.0f);
+    G.inserirAresta(0, 3, 6.0f);
+    G.inserirAresta(1, 2, 3.0f);
+    G.inserirAresta(1, 3, 8.0f);
+    G.inserirAresta(1, 4, 5.0f);
+    G.inserirAresta(2, 4, 7.0f);
+    G.inserirAresta(3, 4, 9.0f);
+
+    // Chama Prim
+    G.primMST();
+
+    // Chama Kruskal
+    G.kruskalMST();
     return 0;
 }
