@@ -17,6 +17,7 @@
 #include <set>
 #include <stack>
 #include <functional>
+#include <numeric>
 using namespace std;
 
 // Classe base abstrata para grafos
@@ -932,6 +933,94 @@ public:
         
         cout << "Numero de passos: " << passos << endl;
         return make_pair(fluxoInicial, fluxoAtual);
+    }
+
+    // Algoritmo de Prim para AGM
+    void primMST() {
+        cout << "\nExecutando PrimMST" << endl;
+        auto t0 = chrono::high_resolution_clock::now();
+
+        vector<bool> inMST(qtdVertices, false);
+        // min-heap de pares (peso, vertice)
+        priority_queue<pair<float,int>, vector<pair<float,int>>, greater<>> pq;
+        // inicia em 0 (ou qualquer vértice)
+        pq.emplace(0.0f, 0);
+
+        float totalPeso = 0.0f;
+        int arestasSelecionadas = 0;
+
+        while (!pq.empty() && arestasSelecionadas < qtdVertices - 1) {
+            auto [peso, u] = pq.top(); pq.pop();
+            if (inMST[u]) continue;
+            inMST[u] = true;
+            totalPeso += peso;
+            arestasSelecionadas++;
+            // relaxa arestas adjacentes
+            for (auto &aresta : lista[u]) {
+                int v = aresta.destino;
+                float w = aresta.peso;
+                if (!inMST[v]) {
+                    pq.emplace(w, v);
+                }
+            }
+        }
+
+        auto t1 = chrono::high_resolution_clock::now();
+        auto dur = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
+
+        cout << "PrimMST - Soma das arestas: " << totalPeso
+             << " | Tempo: " << dur << " ms" << endl;
+    }
+
+    // Algoritmo de Kruskal para AGM
+    void kruskalMST() {
+        cout << "\nExecutando KruskalMST" << endl;
+        auto t0 = chrono::high_resolution_clock::now();
+
+        // coleta todas as arestas (u,v,peso), sem duplicar em grafo não-direcionado
+        struct Edge { int u, v; float w; };
+        vector<Edge> edges;
+        for (int u = 0; u < qtdVertices; u++) {
+            for (auto &a : lista[u]) {
+                if (u < a.destino) { // evita duplicar (u,v) e (v,u)
+                    edges.push_back({u, a.destino, a.peso});
+                }
+            }
+        }
+        // ordena por peso
+        sort(edges.begin(), edges.end(),
+             [](const Edge &a, const Edge &b){ return a.w < b.w; });
+
+        // estrutura Union-Find
+        vector<int> parent(qtdVertices), rank(qtdVertices,0);
+        iota(parent.begin(), parent.end(), 0);
+        function<int(int)> find = [&](int x){
+            return parent[x] == x ? x : parent[x] = find(parent[x]);
+        };
+        auto unite = [&](int x, int y){
+            x = find(x); y = find(y);
+            if (x == y) return false;
+            if (rank[x] < rank[y]) swap(x,y);
+            parent[y] = x;
+            if (rank[x] == rank[y]) rank[x]++;
+            return true;
+        };
+
+        float totalPeso = 0.0f;
+        int count = 0;
+        for (auto &e : edges) {
+            if (unite(e.u, e.v)) {
+                totalPeso += e.w;
+                count++;
+                if (count == qtdVertices - 1) break;
+            }
+        }
+
+        auto t1 = chrono::high_resolution_clock::now();
+        auto dur = chrono::duration_cast<chrono::milliseconds>(t1 - t0).count();
+
+        cout << "KruskalMST - Soma das arestas: " << totalPeso
+             << " | Tempo: " << dur << " ms" << endl;
     }
 };
 
