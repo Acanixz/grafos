@@ -72,8 +72,8 @@ size = Vector2(15, 15)
 [node name="Banana" type="AnimatedSprite2D"]
 sprite_frames = SubResource("SpriteFrames_3w730")
 autoplay = "default"
-frame = 3
-frame_progress = 0.434774
+frame = 5
+frame_progress = 0.91038
 
 [node name="Area2D" type="Area2D" parent="."]
 

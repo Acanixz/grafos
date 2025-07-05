@@ -1,52 +1,99 @@
-[gd_scene load_steps=6 format=4 uid="uid://d2qkcdmh4j5f8"]
+[gd_scene load_steps=11 format=4 uid="uid://d2qkcdmh4j5f8"]
 
+[ext_resource type="Script" uid="uid://d2ncsafjj5pdb" path="res://scripts/camera.gd" id="1_lbhrr"]
 [ext_resource type="Texture2D" uid="uid://cyos8q18dfon" path="res://assets/textures/map.png" id="1_uwrxv"]
 [ext_resource type="PackedScene" uid="uid://cde3yf1wjd6j6" path="res://scenes/player.tscn" id="2_lnu2h"]
+[ext_resource type="Script" uid="uid://duejttrmauaom" path="res://scripts/map.gd" id="3_iywne"]
 [ext_resource type="PackedScene" uid="uid://dyby4db7tp7fl" path="res://scenes/banana.tscn" id="3_lbhrr"]
+[ext_resource type="Texture2D" uid="uid://cstkmi35gvnyv" path="res://assets/textures/debug.png" id="4_p57ef"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_uwrxv"]
 texture = ExtResource("1_uwrxv")
 separation = Vector2i(1, 1)
 texture_region_size = Vector2i(32, 32)
 0:2/0 = 0
+0:2/0/custom_data_0 = -1.0
 1:2/0 = 0
+1:2/0/custom_data_0 = -1.0
 2:2/0 = 0
+2:2/0/custom_data_0 = -1.0
 3:2/0 = 0
+3:2/0/custom_data_0 = -1.0
 4:2/0 = 0
+4:2/0/custom_data_0 = -1.0
 4:1/0 = 0
+4:1/0/custom_data_0 = -1.0
 3:1/0 = 0
+3:1/0/custom_data_0 = -1.0
 2:1/0 = 0
+2:1/0/custom_data_0 = -1.0
 1:1/0 = 0
+1:1/0/custom_data_0 = -1.0
 0:1/0 = 0
+0:1/0/custom_data_0 = -1.0
 0:0/0 = 0
+0:0/0/custom_data_0 = 1.0
 1:0/0 = 0
+1:0/0/custom_data_0 = 1.0
 2:0/0 = 0
+2:0/0/custom_data_0 = 1.0
 3:0/0 = 0
 3:0/0/probability = 0.3
+3:0/0/custom_data_0 = 0.8
 4:0/0 = 0
 4:0/0/probability = 0.3
+4:0/0/custom_data_0 = 0.8
 0:3/animation_speed = 2.0
 0:3/animation_frame_0/duration = 1.0
 0:3/animation_frame_1/duration = 1.0
 0:3/animation_frame_2/duration = 1.0
 0:3/animation_frame_3/duration = 1.0
 0:3/0 = 0
+0:3/0/custom_data_0 = -1.0
 
 [sub_resource type="TileSet" id="TileSet_yqjtg"]
 tile_size = Vector2i(32, 32)
+custom_data_layer_0/name = "weight"
+custom_data_layer_0/type = 3
 sources/0 = SubResource("TileSetAtlasSource_uwrxv")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_u5sy4"]
+texture = ExtResource("4_p57ef")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+2:0/0/modulate = Color(0, 0, 1, 1)
+3:0/0 = 0
+3:0/0/modulate = Color(1, 0, 0, 1)
+4:0/0 = 0
+4:0/0/modulate = Color(0, 1, 0, 1)
+
+[sub_resource type="TileSet" id="TileSet_gee14"]
+tile_size = Vector2i(32, 32)
+sources/1 = SubResource("TileSetAtlasSource_u5sy4")
 
 [node name="Game" type="Node2D"]
 
 [node name="Camera2D" type="Camera2D" parent="."]
+script = ExtResource("1_lbhrr")
 
-[node name="TileMapLayer" type="TileMapLayer" parent="."]
+[node name="Map" type="TileMapLayer" parent="." node_paths=PackedStringArray("visualizer")]
 position = Vector2(-16, -16)
 tile_map_data = PackedByteArray("AAAAAAAAAAAAAAMAAAABAAAAAAAAAAMAAAACAAAAAAAAAAMAAAADAAAAAAAAAAMAAAAAAP//AAACAAAAAAABAP//AAACAAAAAAACAP//AAACAAAAAAADAP//AAACAAAAAAAEAP//AAACAAAAAAAEAAAAAAADAAAAAAAEAAEAAAAAAAAAAAADAAEAAAAAAAMAAAACAAEAAAAAAAMAAAABAAEAAAAAAAMAAAAAAAEAAAAAAAMAAAD//wEAAAAAAAMAAAD//wAAAAAAAAMAAAD/////AAAAAAAAAAAGAAMAAAACAAIAAAAFAAMAAAAAAAAAAAAEAAMAAAAAAAAAAAADAAMAAAAAAAAAAAACAAMAAAABAAAAAAABAAMAAAAAAAAAAAAAAAMAAAABAAAAAAD//wMAAAADAAAAAAD+/wMAAAABAAAAAAD+/wIAAAADAAAAAAD//wIAAAABAAAAAAAAAAIAAAABAAAAAAABAAIAAAACAAAAAAACAAIAAAAEAAAAAAADAAIAAAAAAAAAAAAEAAIAAAADAAAAAAAFAAIAAAABAAAAAAAGAAIAAAACAAIAAAD9/wMAAAAAAAAAAAD9/wIAAAACAAAAAAD9/wEAAAABAAAAAAD+/wEAAAAAAAMAAAD+/wAAAAAAAAMAAAD+////AAACAAAAAAD+//7/AAABAAAAAAD9//7/AAACAAAAAAD9////AAAAAAAAAAD9/wAAAAADAAAAAAD9//3/AAADAAIAAAD+//3/AAABAAEAAAD///3/AAAEAAIAAAAAAP3/AAACAAIAAAABAP3/AAADAAIAAAACAP3/AAAEAAIAAAADAP3/AAAEAAIAAAAEAP3/AAABAAEAAAAFAP3/AAACAAEAAAAGAP3/AAADAAEAAAAGAP7/AAABAAEAAAAFAP7/AAABAAAAAAAEAP7/AAAEAAAAAAADAP7/AAABAAAAAAACAP7/AAACAAAAAAABAP7/AAADAAAAAAAAAP7/AAAAAAAAAAD///7/AAACAAAAAAAGAP//AAAAAAEAAAAGAAAAAAACAAIAAAAGAAEAAAADAAEAAAAFAAEAAAADAAAAAAAFAAAAAAAAAAAAAAAFAP//AAABAAAAAAD8////AAAAAAAAAAD8/wAAAAABAAAAAAD8/wEAAAAAAAAAAAD8/wIAAAAAAAAAAAD8/wMAAAABAAAAAAD8//7/AAADAAAAAAD8//3/AAADAAEAAAD7//3/AAADAAIAAAD7//7/AAABAAIAAAD7////AAAAAAEAAAD7/wAAAAAAAAIAAAD7/wEAAAABAAEAAAD7/wIAAAACAAEAAAD7/wMAAAAAAAEAAAD7/wQAAAAAAAIAAAD8/wQAAAABAAIAAAD9/wQAAAAEAAIAAAD+/wQAAAAAAAEAAAD//wQAAAAAAAIAAAAAAAQAAAACAAIAAAABAAQAAAAEAAIAAAACAAQAAAADAAIAAAADAAQAAAACAAIAAAAEAAQAAAACAAEAAAAFAAQAAAAAAAEAAAAGAAQAAAABAAIAAAA=")
 tile_set = SubResource("TileSet_yqjtg")
+script = ExtResource("3_iywne")
+visualizer = NodePath("../Visualizer")
 
-[node name="Player" parent="." instance=ExtResource("2_lnu2h")]
-position = Vector2(0, -32)
+[node name="Visualizer" type="TileMapLayer" parent="."]
+modulate = Color(1, 1, 1, 0.831373)
+z_index = 1
+position = Vector2(-16, -16)
+tile_set = SubResource("TileSet_gee14")
+
+[node name="Player" parent="." node_paths=PackedStringArray("tilemap") instance=ExtResource("2_lnu2h")]
+position = Vector2(0, -64)
+tilemap = NodePath("../Map")
 
 [node name="Banana" parent="." instance=ExtResource("3_lbhrr")]
 position = Vector2(0, 64)
