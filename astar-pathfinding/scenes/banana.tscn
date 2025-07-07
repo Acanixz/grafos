@@ -1,6 +1,7 @@
-[gd_scene load_steps=12 format=3 uid="uid://dyby4db7tp7fl"]
+[gd_scene load_steps=13 format=3 uid="uid://dyby4db7tp7fl"]
 
 [ext_resource type="Texture2D" uid="uid://bgtp2q1p3fr1e" path="res://assets/textures/banana.png" id="1_3gmt6"]
+[ext_resource type="Script" uid="uid://cssbfqbc7vahw" path="res://scripts/banana.gd" id="2_a45fu"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_bkbm4"]
 atlas = ExtResource("1_3gmt6")
@@ -74,8 +75,11 @@ sprite_frames = SubResource("SpriteFrames_3w730")
 autoplay = "default"
 frame = 5
 frame_progress = 0.91038
+script = ExtResource("2_a45fu")
 
 [node name="Area2D" type="Area2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
 shape = SubResource("RectangleShape2D_ja1q4")
+
+[connection signal="body_entered" from="Area2D" to="." method="_on_area_2d_body_entered"]

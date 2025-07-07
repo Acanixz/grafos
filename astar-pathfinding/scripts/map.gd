@@ -16,7 +16,7 @@ const MENOR_PESO = 0.8
 ## A* encontra um caminho de ínicio até fim.[br]
 ## h é a função heuristica. Onde h(n) estima o custo 
 ## para alcançar fim a partir do nó n
-func A_Star(inicio: Vector2i, fim: Vector2i, h: Callable):
+func A_Star(inicio: Vector2i, fim: Vector2i, funcH: Callable):
 	# Conjunto de nós que podem precisar ser (re-)expandidos
 	# Inicialmente, apenas o nó inicial é conhecido
 	var open_set = [inicio]
@@ -36,7 +36,7 @@ func A_Star(inicio: Vector2i, fim: Vector2i, h: Callable):
 	# Estimativa total do custo ao passar por cada nó
 	# calculo realizado a partir de h (função heuristica)
 	var f_score = {}
-	f_score[inicio] = h.call(inicio, fim)
+	f_score[inicio] = funcH.call(inicio, fim)
 	
 	while not open_set.is_empty():
 		await get_tree().create_timer(0.1).timeout
@@ -73,7 +73,7 @@ func A_Star(inicio: Vector2i, fim: Vector2i, h: Callable):
 				# Esse caminho é melhor que registros anteriores, guarda ele!
 				origem[no_vizinho] = node_atual
 				g_score[no_vizinho] = tentative_g_score
-				f_score[no_vizinho] = tentative_g_score + h.call(no_vizinho, fim)
+				f_score[no_vizinho] = tentative_g_score + funcH.call(no_vizinho, fim)
 				if no_vizinho not in open_set:
 					open_set.append(no_vizinho)
 		# paint_visualizer(DebugColors.RED, node_atual)
@@ -132,6 +132,6 @@ func reconstruct_path(origem: Dictionary, destino: Vector2i) -> Array:
 	caminho.reverse() # porque reconstruímos de trás pra frente
 	return caminho
 
-func paint_visualizer(id: int, position: Vector2i):
+func paint_visualizer(id: int, pos: Vector2i):
 	if not visualizer or id < 0 or id > 4: return
-	visualizer.set_cell(position, 1, Vector2i(id, 0))
+	visualizer.set_cell(pos, 1, Vector2i(id, 0))

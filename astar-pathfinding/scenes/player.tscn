@@ -1,7 +1,9 @@
-[gd_scene load_steps=14 format=3 uid="uid://cde3yf1wjd6j6"]
+[gd_scene load_steps=16 format=3 uid="uid://cde3yf1wjd6j6"]
 
 [ext_resource type="Texture2D" uid="uid://cs4h0uej8abbh" path="res://assets/textures/player.png" id="1_v0iea"]
 [ext_resource type="Script" uid="uid://cj3ihfh4560m6" path="res://scripts/player.gd" id="2_g2els"]
+[ext_resource type="AudioStream" uid="uid://8v3w8kf5w686" path="res://assets/sounds/win.mp3" id="3_dqkch"]
+[ext_resource type="AudioStream" uid="uid://bd3w0d8remifi" path="res://assets/sounds/snd_hurt1.wav" id="4_qlg0r"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3vyb7"]
 size = Vector2(15, 15)
@@ -108,3 +110,11 @@ scale = Vector2(1.5, 1.5)
 sprite_frames = SubResource("SpriteFrames_gymyn")
 animation = &"front"
 autoplay = "front"
+
+[node name="Win" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_dqkch")
+volume_db = 5.0
+
+[node name="SndHurt1" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_qlg0r")
+volume_db = -20.0

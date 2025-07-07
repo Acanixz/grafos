@@ -1,7 +1,9 @@
-[gd_scene load_steps=11 format=4 uid="uid://d2qkcdmh4j5f8"]
+[gd_scene load_steps=13 format=4 uid="uid://d2qkcdmh4j5f8"]
 
 [ext_resource type="Script" uid="uid://d2ncsafjj5pdb" path="res://scripts/camera.gd" id="1_lbhrr"]
+[ext_resource type="Script" uid="uid://rlaphhx4tfub" path="res://scripts/game.gd" id="1_u5sy4"]
 [ext_resource type="Texture2D" uid="uid://cyos8q18dfon" path="res://assets/textures/map.png" id="1_uwrxv"]
+[ext_resource type="PackedScene" uid="uid://i7tblc7i12p0" path="res://scenes/ui.tscn" id="2_gee14"]
 [ext_resource type="PackedScene" uid="uid://cde3yf1wjd6j6" path="res://scenes/player.tscn" id="2_lnu2h"]
 [ext_resource type="Script" uid="uid://duejttrmauaom" path="res://scripts/map.gd" id="3_iywne"]
 [ext_resource type="PackedScene" uid="uid://dyby4db7tp7fl" path="res://scenes/banana.tscn" id="3_lbhrr"]
@@ -73,10 +75,23 @@ texture_region_size = Vector2i(32, 32)
 tile_size = Vector2i(32, 32)
 sources/1 = SubResource("TileSetAtlasSource_u5sy4")
 
-[node name="Game" type="Node2D"]
+[node name="Game" type="Node2D" node_paths=PackedStringArray("tilemap", "banana", "player")]
+script = ExtResource("1_u5sy4")
+tilemap = NodePath("Map")
+banana = NodePath("Banana")
+player = NodePath("Player")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 script = ExtResource("1_lbhrr")
+
+[node name="UI" parent="Camera2D" node_paths=PackedStringArray("tilemap", "player") instance=ExtResource("2_gee14")]
+z_index = 99
+offset_left = -576.0
+offset_top = -324.0
+offset_right = 576.0
+offset_bottom = 324.0
+tilemap = NodePath("../../Map")
+player = NodePath("../../Player")
 
 [node name="Map" type="TileMapLayer" parent="." node_paths=PackedStringArray("visualizer")]
 position = Vector2(-16, -16)
@@ -86,14 +101,15 @@ script = ExtResource("3_iywne")
 visualizer = NodePath("../Visualizer")
 
 [node name="Visualizer" type="TileMapLayer" parent="."]
-modulate = Color(1, 1, 1, 0.831373)
+modulate = Color(1, 1, 1, 0.823529)
 z_index = 1
 position = Vector2(-16, -16)
 tile_set = SubResource("TileSet_gee14")
 
-[node name="Player" parent="." node_paths=PackedStringArray("tilemap") instance=ExtResource("2_lnu2h")]
+[node name="Player" parent="." node_paths=PackedStringArray("tilemap", "visualizer") instance=ExtResource("2_lnu2h")]
 position = Vector2(0, -64)
 tilemap = NodePath("../Map")
+visualizer = NodePath("../Visualizer")
 
 [node name="Banana" parent="." instance=ExtResource("3_lbhrr")]
 position = Vector2(0, 64)

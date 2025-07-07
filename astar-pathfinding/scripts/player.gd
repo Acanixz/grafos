@@ -1,6 +1,8 @@
+class_name Player
 extends CharacterBody2D
 
 @export var tilemap: AStarTileMap
+@export var visualizer: TileMapLayer
 var caminho: Array = [] 	# lista de tiles Vector2i
 var index_atual = 0 		# Indice p/ onde player está indo
 var andando = false
@@ -28,8 +30,9 @@ func recalcular_caminho():
 		seguir_caminho(novo_caminho)
 	else:
 		print("Novo caminho não encontrado.")
+		fail()
 
-func _physics_process(delta):
+func _physics_process(_delta):
 	if andando and index_atual < caminho.size():
 		var destino_tile: Vector2i = caminho[index_atual]
 		var destino = tile_para_posicao(destino_tile)
@@ -49,18 +52,21 @@ func _physics_process(delta):
 				var tile_data = tilemap.get_cell_tile_data(proximo_tile)
 				if not tile_data or tile_data.get_custom_data("weight") == -1:
 					print("Caminho obstruído, recalculando...")
+					fail()
 					recalcular_caminho()
 	else:
 		velocity = Vector2.ZERO
 
-func _ready() -> void:
-	var inicio = Vector2i(0, -2)
-	var fim = Vector2i(0, 2)
-	var caminho = await tilemap.A_Star(inicio, fim, tilemap.h)
-	if caminho:
-		Engine.time_scale = .5
-		print("Caminho encontrado: ", caminho)
-		seguir_caminho(caminho)
-		Engine.time_scale = 1
-	else:
-		print("Não foi possível encontrar caminho")
+func win():
+	$Sprite.set_animation("win")
+	$Win.play()
+	await $Win.finished
+	$Sprite.set_animation("front")
+	if visualizer:
+		visualizer.clear()
+
+func fail():
+	$Sprite.modulate = Color.RED
+	$SndHurt1.play()
+	await $SndHurt1.finished
+	$Sprite.modulate = Color.WHITE

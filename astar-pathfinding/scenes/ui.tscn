@@ -1,0 +1,117 @@
+[gd_scene load_steps=4 format=3 uid="uid://i7tblc7i12p0"]
+
+[ext_resource type="Script" uid="uid://cranvtmdtgqne" path="res://scripts/ui.gd" id="1_nt7q6"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_nt7q6"]
+font_size = 32
+
+[sub_resource type="LabelSettings" id="LabelSettings_x4jx1"]
+
+[node name="UI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_nt7q6")
+
+[node name="EditorUi" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="EditorUi"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="ActionContainer" type="GridContainer" parent="EditorUi"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -164.0
+offset_top = -101.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_constants/v_separation = 4
+
+[node name="StartBtn" type="Button" parent="EditorUi/ActionContainer"]
+layout_mode = 2
+text = "Iniciar"
+
+[node name="MovePlayerBtn" type="Button" parent="EditorUi/ActionContainer"]
+layout_mode = 2
+text = "Mover jogador"
+
+[node name="MovCrtBananaBtn" type="Button" parent="EditorUi/ActionContainer"]
+layout_mode = 2
+text = "Mover/Criar banana"
+
+[node name="TilePanel" type="Panel" parent="EditorUi"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -75.0
+offset_right = 200.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="GridContainer" type="GridContainer" parent="EditorUi/TilePanel"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+columns = 10
+
+[node name="ConfirmEditUI" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="ConfirmEditUI"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_right = 20.0
+offset_bottom = 23.0
+grow_horizontal = 2
+text = "Clique para posicionar"
+label_settings = SubResource("LabelSettings_nt7q6")
+
+[node name="PathfindStatusUI" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="PathfindStatusUI"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -200.0
+offset_right = 293.0
+grow_vertical = 0
+text = "Pathfinding:
+Aguardando movimento"
+label_settings = SubResource("LabelSettings_x4jx1")
+vertical_alignment = 2
