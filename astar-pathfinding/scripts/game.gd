@@ -2,9 +2,12 @@ class_name Game
 extends Node2D
 
 @export var tilemap: AStarTileMap
+@export var visualizer: TileMapLayer
 @export var banana: Banana
 @export var player: Player
 const BANANA_SCENE = preload("res://scenes/banana.tscn")
+
+signal object_placed
 
 ## Coloca uma banana no mapa, ou reposiciona caso já exista
 func set_banana(pos: Vector2i):
@@ -12,14 +15,17 @@ func set_banana(pos: Vector2i):
 		banana = BANANA_SCENE.instantiate()
 		add_child(banana)
 	banana.position = pos
+	object_placed.emit()
 
 ## Reposiciona o player
 func set_player_pos(pos: Vector2i):
 	player.position = pos
+	object_placed.emit()
 
 func iniciar_pathfind():
 	if not banana:
 		print("Não há potassio o suficiente no mapa!")
+		player.pathfind_done.emit()
 		return
 	
 	var player_pos = player.position
@@ -35,12 +41,10 @@ func iniciar_pathfind():
 		player.seguir_caminho(resultado)
 		Engine.time_scale = 1
 	else:
+		if visualizer:
+			visualizer.clear()
 		print("Não foi possível encontrar caminho")
-
-## Define o tile correspondente
-func set_tile(pos: Vector2i, id: Vector2i):
-	tilemap.set_cell(pos, 0, id)
+		player.pathfind_done.emit()
 
 func _ready() -> void:
 	set_banana(Vector2i(64,64))
-	iniciar_pathfind()

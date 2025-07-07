@@ -8,6 +8,8 @@ var index_atual = 0 		# Indice p/ onde player está indo
 var andando = false
 var velocidade = 100.0
 
+signal pathfind_done
+
 ## Coversão de coordenadas tilemap para coordenadas reais
 ## (1 unidade tilemap : 32 unidades reais)
 func tile_para_posicao(tile: Vector2i) -> Vector2:
@@ -31,6 +33,7 @@ func recalcular_caminho():
 	else:
 		print("Novo caminho não encontrado.")
 		fail()
+		pathfind_done.emit()
 
 func _physics_process(_delta):
 	if andando and index_atual < caminho.size():
@@ -38,7 +41,9 @@ func _physics_process(_delta):
 		var destino = tile_para_posicao(destino_tile)
 		var direcao = (destino - global_position).normalized()
 		var distancia = global_position.distance_to(destino)
-
+		
+		_update_facing(direcao)
+		
 		if distancia > 2:  # tolerância para "chegou"
 			velocity = direcao * velocidade
 			move_and_slide()
@@ -56,6 +61,13 @@ func _physics_process(_delta):
 					recalcular_caminho()
 	else:
 		velocity = Vector2.ZERO
+
+func _update_facing(direction: Vector2) -> void:
+	if $Sprite.animation == "win": return
+	if abs(direction.x) > abs(direction.y):
+		$Sprite.animation = "right" if direction.x > 0 else "left"
+	else:
+		$Sprite.animation = "front" if direction.y > 0 else "back"
 
 func win():
 	$Sprite.set_animation("win")

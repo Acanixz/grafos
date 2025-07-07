@@ -3,6 +3,7 @@ extends TileMapLayer
 
 ## Permite que A* calcule caminhos diagonais
 @export var diagonal_enabled = false
+@export var delay_algorithm = true
 @export var visualizer : TileMapLayer
 enum DebugColors {
 	BLACK,
@@ -39,7 +40,8 @@ func A_Star(inicio: Vector2i, fim: Vector2i, funcH: Callable):
 	f_score[inicio] = funcH.call(inicio, fim)
 	
 	while not open_set.is_empty():
-		await get_tree().create_timer(0.1).timeout
+		if delay_algorithm:
+			await get_tree().create_timer(0.1).timeout
 		# Nó atual = Nó do openSet com o menor fScore
 		var node_atual = open_set[0]
 		var novo_node = open_set[0]
